@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProductivityBooster — Obsidian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── TOKENS ── */
+:root {
+  --black:     #060608;
+  --deep:      #0C0C10;
+  --surface:   #111116;
+  --border:    rgba(255,255,255,0.07);
+  --border-hi: rgba(255,255,255,0.13);
+  --text:      #E8E6E1;
+  --muted:     #6B6870;
+  --faint:     #2A282F;
+  --gold:      #C9A84C;
+  --gold-dim:  rgba(201,168,76,0.15);
+  --gold-glow: rgba(201,168,76,0.06);
+  --glass-bg:  rgba(255,255,255,0.03);
+  --glass-hi:  rgba(255,255,255,0.06);
+  --blur:      blur(24px);
+}
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ── AMBIENT GLOW ── */
+.ambient {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.ambient-1 {
+  width: 600px; height: 600px;
+  top: -200px; left: -100px;
+  background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+}
+.ambient-2 {
+  width: 500px; height: 500px;
+  bottom: -100px; right: -100px;
+  background: radial-gradient(circle, rgba(201,168,76,0.04) 0%, transparent 70%);
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 60px;
+  background: rgba(6,6,8,0.6);
+  backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-cta {
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--black) !important;
+  background: var(--gold);
+  padding: 9px 20px;
+  border-radius: 2px;
+  transition: opacity 0.2s !important;
+}
+.nav-cta:hover { opacity: 0.85 !important; color: var(--black) !important; }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 160px 40px 100px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-hi);
+  backdrop-filter: var(--blur);
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.2s;
+}
+
+.hero-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3.2rem, 7vw, 6.5rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  max-width: 900px;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.9s ease forwards 0.4s;
+}
+
+.hero-headline em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.hero-sub {
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.7;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: fadeUp 0.9s ease forwards 0.6s;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  animation: fadeUp 0.9s ease forwards 0.8s;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  padding: 14px 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  text-decoration: none;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border-hi);
+  padding: 14px 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  text-decoration: none;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-hi); }
+
+/* ── FLOATING CALENDAR PREVIEW ── */
+.hero-preview {
+  position: relative;
+  margin-top: 80px;
+  width: 100%;
+  max-width: 780px;
+  opacity: 0;
+  animation: fadeUp 1s ease forwards 1s;
+}
+
+.preview-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--blur);
+  border-radius: 16px;
+  padding: 28px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.preview-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.preview-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+}
+
+.preview-events {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--glass-hi);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+
+.event-row:hover { border-color: var(--border-hi); }
+
+.event-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  min-width: 48px;
+}
+
+.event-bar {
+  width: 3px;
+  height: 32px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.event-info { flex: 1; }
+
+.event-name {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.event-meta {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.event-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+
+.tag-conflict {
+  background: rgba(239,68,68,0.1);
+  color: #EF4444;
+  border: 1px solid rgba(239,68,68,0.2);
+}
+
+.tag-ok {
+  background: rgba(201,168,76,0.1);
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.2);
+}
+
+.tag-ai {
+  background: rgba(100,200,150,0.08);
+  color: #64C896;
+  border: 1px solid rgba(100,200,150,0.15);
+}
+
+/* Floating AI card */
+.ai-suggestion {
+  position: absolute;
+  bottom: -24px;
+  right: 40px;
+  background: rgba(12,12,16,0.92);
+  border: 1px solid var(--border-hi);
+  backdrop-filter: var(--blur);
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-width: 280px;
+}
+
+.ai-suggestion::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+}
+
+.ai-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-label-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.ai-text {
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ── DIVIDER ── */
+.section-divider {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 60px;
+  margin: 80px 0;
+}
+
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+
+.divider-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── FEATURES ── */
+.features {
+  position: relative;
+  z-index: 1;
+  padding: 0 60px 120px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.features-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.features-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text);
+  max-width: 540px;
+  margin-bottom: 72px;
+}
+
+.features-headline em { font-style: italic; color: var(--gold); }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.feature-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s;
+  cursor: default;
+}
+
+.feature-card:hover {
+  background: var(--glass-hi);
+  border-color: var(--border-hi);
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feature-card:hover::after { opacity: 1; }
+
+.feature-number {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+  margin-bottom: 32px;
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 24px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+.feature-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.feature-desc {
+  font-size: 0.83rem;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── STATS ── */
+.stats {
+  position: relative;
+  z-index: 1;
+  padding: 80px 60px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  max-width: 1200px;
+  margin: 0 auto 120px;
+}
+
+.stat-item {
+  padding: 40px 48px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.stat-item:last-child { border-right: none; }
+
+.stat-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-number span { color: var(--gold); }
+
+.stat-label {
+  font-size: 0.78rem;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── CTA ── */
+.cta-section {
+  position: relative;
+  z-index: 1;
+  padding: 0 60px 160px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cta-inner {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--blur);
+  border-radius: 4px;
+  padding: 80px 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-inner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+}
+
+.cta-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+}
+
+.cta-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.cta-headline em { font-style: italic; color: var(--gold); }
+
+.cta-sub {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 48px;
+}
+
+.cta-form {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  max-width: 440px;
+  margin: 0 auto;
+  border: 1px solid var(--border-hi);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+
+.cta-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 14px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: var(--text);
+}
+
+.cta-input::placeholder { color: var(--faint); }
+
+.cta-btn {
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  padding: 14px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.cta-btn:hover { opacity: 0.85; }
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 32px 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.footer-copy {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--faint);
+  letter-spacing: 0.08em;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    ProductivityBooster
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#" class="nav-cta">Early Access</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    AI Calendar Intelligence
+  </div>
+
+  <h1 class="hero-headline">
+    Your schedule,<br><em>finally at peace.</em>
+  </h1>
+
+  <p class="hero-sub">
+    ProductivityBooster resolves conflicts, tracks attendance, and handles the awkward email — so you never have to.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#" class="btn-primary">Join the Waitlist</a>
+    <a href="#features" class="btn-ghost">See how it works</a>
+  </div>
+
+  <div class="hero-preview">
+    <div class="preview-card">
+      <div class="preview-header">
+        <span class="preview-title">Today — Wednesday</span>
+        <span class="preview-date">07 May 2026</span>
+      </div>
+      <div class="preview-events">
+        <div class="event-row">
+          <span class="event-time">09:00</span>
+          <div class="event-bar" style="background:#4A7C59;"></div>
+          <div class="event-info">
+            <div class="event-name">Sprint Planning</div>
+            <div class="event-meta">Google Meet · 60 min</div>
+          </div>
+          <span class="event-tag tag-ok">Confirmed</span>
+        </div>
+        <div class="event-row">
+          <span class="event-time">10:30</span>
+          <div class="event-bar" style="background:#EF4444;"></div>
+          <div class="event-info">
+            <div class="event-name">Client Sync — Acme Corp</div>
+            <div class="event-meta">Zoom · 30 min</div>
+          </div>
+          <span class="event-tag tag-conflict">Conflict</span>
+        </div>
+        <div class="event-row">
+          <span class="event-time">10:30</span>
+          <div class="event-bar" style="background:#6B6870;"></div>
+          <div class="event-info">
+            <div class="event-name">Design Review</div>
+            <div class="event-meta">Teams · 45 min</div>
+          </div>
+          <span class="event-tag tag-ai">AI Resolving…</span>
+        </div>
+        <div class="event-row">
+          <span class="event-time">14:00</span>
+          <div class="event-bar" style="background:#C9A84C;"></div>
+          <div class="event-info">
+            <div class="event-name">1:1 with Manager</div>
+            <div class="event-meta">Zoom · 30 min</div>
+          </div>
+          <span class="event-tag tag-ok">Confirmed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-suggestion">
+      <div class="ai-label">
+        <div class="ai-label-dot"></div>
+        AI Suggestion
+      </div>
+      <div class="ai-text">Keep Client Sync — you've attended 9/10 client calls. Draft decline sent to Design Review organizer.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVIDER -->
+<div class="section-divider">
+  <div class="divider-line"></div>
+  <span class="divider-label">Capabilities</span>
+  <div class="divider-line"></div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <p class="features-label reveal">What it does</p>
+  <h2 class="features-headline reveal">Built for people who <em>live</em> inside their calendar.</h2>
+
+  <div class="features-grid">
+
+    <div class="feature-card reveal">
+      <div class="feature-number">01</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+      </svg>
+      <div class="feature-name">Conflict Resolution</div>
+      <div class="feature-desc">Three-layer intelligence: your rules fire first, then AI weighs your patterns, then you decide. Over time, it resolves conflicts without asking.</div>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-number">02</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+      </svg>
+      <div class="feature-name">Attendance Tracking</div>
+      <div class="feature-desc">A quiet nudge five minutes after each meeting ends. Did you go? One tap. That answer shapes every future recommendation.</div>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-number">03</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      <div class="feature-name">Follow-Up Capture</div>
+      <div class="feature-desc">The moment a meeting ends, capture what's next. AI suggests action items based on the meeting context. One tap pushes them to Notion or Jira.</div>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-number">04</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <div class="feature-name">AI Decline Messages</div>
+      <div class="feature-desc">Drafts a polished decline using your own templates. Finds a reschedule slot automatically. You approve with one tap — or edit before sending.</div>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-number">05</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M18 20V10M12 20V4M6 20v-6"/>
+      </svg>
+      <div class="feature-name">Behavioral Memory</div>
+      <div class="feature-desc">Every decision you make teaches the system. After 90 days, ProductivityBooster can manage your calendar autonomously — you opt in when ready.</div>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-number">06</div>
+      <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <div class="feature-name">Smart Notifications</div>
+      <div class="feature-desc">Reminders 15 minutes before. Nudges after. Weekly digests. The system learns when you need prompting and when you don't — and quiets accordingly.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats reveal">
+  <div class="stat-item">
+    <div class="stat-number">3<span>hr</span></div>
+    <div class="stat-label">saved per week on average</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">94<span>%</span></div>
+    <div class="stat-label">follow-up completion rate</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number">90<span>d</span></div>
+    <div class="stat-label">to full calendar autonomy</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner reveal">
+    <p class="cta-label">Early Access</p>
+    <h2 class="cta-headline">Less scheduling.<br><em>More doing.</em></h2>
+    <p class="cta-sub">Join the waitlist. Free tier available at launch.</p>
+    <div class="cta-form">
+      <input class="cta-input" type="email" placeholder="your@email.com">
+      <button class="cta-btn">Request Access</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ProductivityBooster</div>
+  <div class="footer-copy">© 2026 · All rights reserved</div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

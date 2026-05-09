@@ -1,0 +1,11 @@
+{
+  "name": "pm-portfolio-generator",
+  "version": "1.0.0",
+  "description": "Generate polished HTML portfolio pages for PM products by analyzing any code repository's documentation, architecture, and source code.",
+  "author": {
+    "name": "shuboya1030"
+  },
+  "repository": "https://github.com/shuboya1030/pm-portfolio-generator",
+  "license": "MIT",
+  "keywords": ["pm", "portfolio", "html", "product-management", "showcase"]
+}

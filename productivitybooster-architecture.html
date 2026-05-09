@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProductivityBooster — Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F8F6F2;
+      --green: #1C3A28; --green-mid: #3D7552; --green-lt: #6BA182;
+      --coral: #B4643C; --purple: #7B5EA7; --gold: #B89A2C; --blue: #3A6B9A;
+      --text: #1A1814; --text-mid: #4A4640; --text-lt: #8A8680;
+      --border: rgba(26,24,20,.10); --border-lt: rgba(26,24,20,.06);
+      --glass-base: rgba(252,250,247,.72); --glass-hi: rgba(255,255,255,.88); --glass-ultra: rgba(255,255,255,.95);
+      --blur-sm: blur(14px); --blur-md: blur(24px);
+      --shine: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(26,24,20,.04);
+      --shine-s: inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(26,24,20,.06);
+      --shadow-sm: 0 1px 3px rgba(26,24,20,.06), 0 1px 2px rgba(26,24,20,.04);
+      --shadow-md: 0 4px 16px rgba(26,24,20,.08), 0 1px 3px rgba(26,24,20,.05), var(--shine);
+      --shadow-lg: 0 12px 40px rgba(26,24,20,.12), 0 4px 12px rgba(26,24,20,.06), var(--shine-s);
+      --shadow-xl: 0 24px 64px rgba(26,24,20,.18), 0 8px 24px rgba(26,24,20,.08), var(--shine-s);
+      --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px;
+      --spring: cubic-bezier(.22,1,.36,1);
+      --c-sync: #3D7552; --c-ai: #7B5EA7; --c-notify: #C9A84C; --c-data: #3A6B9A; --c-ext: #8A8680;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .28; animation: drift 24s ease-in-out infinite alternate; }
+    .orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(61,117,82,.4), transparent 70%); top: -200px; right: -150px; animation-duration: 26s; }
+    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(180,100,60,.22), transparent 70%); bottom: -100px; left: -100px; animation-duration: 32s; animation-delay: -10s; }
+    .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(123,94,167,.2), transparent 70%); top: 40%; left: 40%; animation-duration: 20s; animation-delay: -5s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(28px,18px) scale(1.04); } }
+
+    #page { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; padding: 32px 32px 64px; }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .header-left h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 600; color: var(--green); letter-spacing: -.02em; line-height: 1.1; }
+    .header-left p { font-size: .88rem; color: var(--text-lt); margin-top: 5px; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .header-badge { font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--green-mid); background: rgba(61,117,82,.1); border: 1px solid rgba(61,117,82,.2); border-radius: 20px; padding: 4px 13px; }
+    .header-date { font-family: 'DM Mono', monospace; font-size: .65rem; color: var(--text-lt); }
+
+    /* ── Legend ─────────────────────────────────────────── */
+    .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; padding: 10px 18px; background: var(--glass-hi); backdrop-filter: var(--blur-sm); border: 1px solid var(--border); border-radius: var(--radius-lg); width: fit-content; box-shadow: var(--shadow-sm); }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: .74rem; color: var(--text-mid); }
+    .legend-line { width: 20px; height: 2px; border-radius: 1px; }
+
+    /* ── Architecture Diagram ──────────────────────────── */
+    .arch-wrapper { position: relative; margin-bottom: 36px; }
+    .arch-diagram {
+      display: grid;
+      grid-template-columns: 148px 158px 1fr 162px 162px;
+      gap: 0 8px;
+      min-height: 560px;
+      align-items: start;
+    }
+    .connections-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; overflow: visible; }
+
+    /* Tier columns */
+    .tier { display: flex; flex-direction: column; align-items: stretch; padding: 0 4px; position: relative; z-index: 3; }
+    .tier-header { text-align: center; margin-bottom: 14px; padding: 5px 0; }
+    .tier-label { font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-lt); padding: 3px 10px; background: rgba(26,24,20,.05); border: 1px solid var(--border-lt); border-radius: 20px; display: inline-block; }
+    .tier-nodes { display: flex; flex-direction: column; gap: 9px; }
+
+    /* Services grid (2 columns inside tier) */
+    .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    /* Node cards */
+    .node {
+      background: var(--glass-hi); backdrop-filter: var(--blur-sm);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 11px 12px; text-align: center; cursor: default;
+      transition: all .28s var(--spring);
+      box-shadow: var(--shadow-sm);
+    }
+    .node:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px) scale(1.01); border-color: rgba(28,58,40,.2); }
+    .node.green { background: linear-gradient(145deg, rgba(61,117,82,.12), rgba(61,117,82,.05)); border-color: rgba(61,117,82,.22); }
+    .node.purple { background: linear-gradient(145deg, rgba(123,94,167,.12), rgba(123,94,167,.05)); border-color: rgba(123,94,167,.22); }
+    .node.coral { background: linear-gradient(145deg, rgba(180,100,60,.12), rgba(180,100,60,.05)); border-color: rgba(180,100,60,.22); }
+    .node.gold { background: linear-gradient(145deg, rgba(201,168,76,.12), rgba(201,168,76,.05)); border-color: rgba(201,168,76,.22); }
+    .node.blue { background: linear-gradient(145deg, rgba(58,107,154,.12), rgba(58,107,154,.05)); border-color: rgba(58,107,154,.22); }
+    .node-icon { font-size: 1.35rem; margin-bottom: 5px; }
+    .node-name { font-size: .75rem; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
+    .node-desc { font-size: .62rem; color: var(--text-lt); line-height: 1.4; }
+
+    /* Tier separators */
+    .tier-sep { width: 1px; background: var(--border-lt); margin: 36px 0 0; align-self: stretch; }
+
+    /* ── Tabs ────────────────────────────────────────────── */
+    .tabs-row { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; }
+    .tabs { display: flex; gap: 3px; background: var(--glass-hi); backdrop-filter: var(--blur-sm); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 5px; }
+    .tab { font-family: 'Outfit', sans-serif; font-size: .82rem; font-weight: 500; padding: 8px 20px; border-radius: var(--radius-md); border: none; cursor: pointer; transition: all .22s var(--spring); background: transparent; color: var(--text-mid); }
+    .tab.active { background: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(28,58,40,.25); }
+    .tab:hover:not(.active) { background: rgba(28,58,40,.07); color: var(--green); }
+
+    .tab-panel { display: none; animation: fadeIn .32s var(--spring); }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+
+    /* ── Data Flow ───────────────────────────────────────── */
+    .flow-list { display: flex; flex-direction: column; gap: 0; }
+    .flow-step {
+      display: flex; align-items: flex-start; gap: 18px;
+      padding: 18px 22px;
+      background: var(--glass-hi); backdrop-filter: var(--blur-sm);
+      border: 1px solid var(--border); border-top: none;
+      transition: background .2s;
+    }
+    .flow-step:first-child { border-top: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+    .flow-step:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+    .flow-step:hover { background: rgba(28,58,40,.025); }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff; font-family: 'DM Mono', monospace; font-size: .7rem; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step-body { flex: 1; }
+    .step-title { font-size: .92rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .step-detail { font-size: .8rem; color: var(--text-mid); line-height: 1.6; }
+    .step-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+    .pill { font-family: 'DM Mono', monospace; font-size: .58rem; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--border); background: rgba(26,24,20,.04); color: var(--text-lt); }
+    .pill.g { border-color: rgba(61,117,82,.25); background: rgba(61,117,82,.08); color: var(--green-mid); }
+    .pill.p { border-color: rgba(123,94,167,.25); background: rgba(123,94,167,.08); color: var(--purple); }
+    .pill.a { border-color: rgba(201,168,76,.3); background: rgba(201,168,76,.08); color: #8A7010; }
+    .pill.b { border-color: rgba(58,107,154,.25); background: rgba(58,107,154,.08); color: var(--blue); }
+
+    /* ── Tradeoffs & Risks ───────────────────────────────── */
+    .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+    .icard { background: var(--glass-hi); backdrop-filter: var(--blur-sm); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); }
+    .icard-tag { font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; border: 1px solid; display: inline-block; margin-bottom: 12px; }
+    .tag-to { color: var(--coral); border-color: rgba(180,100,60,.3); background: rgba(180,100,60,.08); }
+    .tag-in { color: var(--green-mid); border-color: rgba(61,117,82,.25); background: rgba(61,117,82,.07); }
+    .tag-hi { color: #B4643C; border-color: rgba(180,100,60,.35); background: rgba(180,100,60,.1); }
+    .tag-me { color: #8A7010; border-color: rgba(201,168,76,.35); background: rgba(201,168,76,.1); }
+    .tag-lo { color: var(--green-mid); border-color: rgba(61,117,82,.3); background: rgba(61,117,82,.08); }
+
+    .icard-title { font-family: 'Cormorant Garamond', serif; font-size: 1.12rem; font-weight: 600; color: var(--green); margin-bottom: 9px; line-height: 1.2; }
+    .icard-body { font-size: .79rem; color: var(--text-mid); line-height: 1.65; }
+    .icard-body strong { color: var(--text); font-weight: 500; }
+    .icard-body code { font-family: 'DM Mono', monospace; font-size: .72rem; background: rgba(26,24,20,.06); padding: 1px 5px; border-radius: 3px; }
+    .risk-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(28,58,40,.15); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div id="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>ProductivityBooster<br>Architecture</h1>
+      <p>System design, data flow, tradeoffs, and risk analysis — MVP scope</p>
+    </div>
+    <div class="header-right">
+      <span class="header-badge">MVP · v1.0</span>
+      <span class="header-date">MAY 2026</span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-sync)"></div>Calendar Sync</div>
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-ai)"></div>AI / ML</div>
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-notify)"></div>Notifications</div>
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-data)"></div>Data R/W</div>
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-ext)"></div>External API</div>
+  </div>
+
+  <!-- Architecture Diagram -->
+  <div class="arch-wrapper" id="arch-wrapper">
+    <div class="arch-diagram" id="arch-diagram">
+
+      <!-- Tier 1: Client -->
+      <div class="tier">
+        <div class="tier-header"><span class="tier-label">Client</span></div>
+        <div class="tier-nodes">
+          <div class="node green" id="n-web">
+            <div class="node-icon">🌐</div>
+            <div class="node-name">Web App (PWA)</div>
+            <div class="node-desc">React · Offline-capable · Service Worker</div>
+          </div>
+          <div class="node green" id="n-mobile">
+            <div class="node-icon">📱</div>
+            <div class="node-name">Mobile App</div>
+            <div class="node-desc">iOS / Android · Push notifications · Background sync</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 2: Gateway -->
+      <div class="tier">
+        <div class="tier-header"><span class="tier-label">Gateway</span></div>
+        <div class="tier-nodes">
+          <div class="node" id="n-gateway">
+            <div class="node-icon">⚡</div>
+            <div class="node-name">API Gateway</div>
+            <div class="node-desc">REST + WebSocket · Rate limiting · Request routing</div>
+          </div>
+          <div class="node" id="n-auth">
+            <div class="node-icon">🔐</div>
+            <div class="node-name">Auth Service</div>
+            <div class="node-desc">OAuth 2.0 · JWT · Calendar permission scopes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 3: Core Services (2×3 grid) -->
+      <div class="tier">
+        <div class="tier-header"><span class="tier-label">Core Services</span></div>
+        <div class="services-grid">
+          <div class="node green" id="n-calsync">
+            <div class="node-icon">🗓</div>
+            <div class="node-name">Calendar Sync</div>
+            <div class="node-desc">Bidirectional · Webhook-driven · Event normalizer</div>
+          </div>
+          <div class="node coral" id="n-conflict">
+            <div class="node-icon">⚖️</div>
+            <div class="node-name">Conflict Engine</div>
+            <div class="node-desc">3-layer: Rules → AI → Manual override</div>
+          </div>
+          <div class="node purple" id="n-ai">
+            <div class="node-icon">🤖</div>
+            <div class="node-name">AI Orchestrator</div>
+            <div class="node-desc">Claude API · Prompt mgmt · Structured output</div>
+          </div>
+          <div class="node gold" id="n-notify">
+            <div class="node-icon">🔔</div>
+            <div class="node-name">Notification Svc</div>
+            <div class="node-desc">Push · Email · In-app · Adaptive frequency</div>
+          </div>
+          <div class="node blue" id="n-followup">
+            <div class="node-icon">✅</div>
+            <div class="node-name">Follow-up Mgr</div>
+            <div class="node-desc">Capture · Track · Async integration sync</div>
+          </div>
+          <div class="node purple" id="n-memory">
+            <div class="node-icon">🧠</div>
+            <div class="node-name">Behavioral Memory</div>
+            <div class="node-desc">Decision embeddings · Pattern learning · Context retrieval</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 4: Integrations -->
+      <div class="tier">
+        <div class="tier-header"><span class="tier-label">Integrations</span></div>
+        <div class="tier-nodes">
+          <div class="node green" id="n-gcal">
+            <div class="node-icon">📅</div>
+            <div class="node-name">Google Calendar</div>
+            <div class="node-desc">Webhook push · OAuth 2.0</div>
+          </div>
+          <div class="node" id="n-outlook">
+            <div class="node-icon">📧</div>
+            <div class="node-name">Outlook / Graph</div>
+            <div class="node-desc">MS Graph API · Subscriptions</div>
+          </div>
+          <div class="node" id="n-apple">
+            <div class="node-icon">🍎</div>
+            <div class="node-name">Apple CalDAV</div>
+            <div class="node-desc">CalDAV protocol · Polling (no webhooks)</div>
+          </div>
+          <div class="node purple" id="n-claude">
+            <div class="node-icon">✦</div>
+            <div class="node-name">Claude API</div>
+            <div class="node-desc">Conflict · Decline msg · Follow-up AI</div>
+          </div>
+          <div class="node" id="n-notion">
+            <div class="node-icon">N</div>
+            <div class="node-name">Notion API</div>
+            <div class="node-desc">Follow-up sync · Database blocks</div>
+          </div>
+          <div class="node" id="n-jira">
+            <div class="node-icon">J</div>
+            <div class="node-name">Jira API</div>
+            <div class="node-desc">Ticket creation · Sprint board sync</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier 5: Data -->
+      <div class="tier">
+        <div class="tier-header"><span class="tier-label">Data Layer</span></div>
+        <div class="tier-nodes">
+          <div class="node blue" id="n-postgres">
+            <div class="node-icon">🗄</div>
+            <div class="node-name">PostgreSQL</div>
+            <div class="node-desc">Users · Events · Rules · Follow-ups</div>
+          </div>
+          <div class="node" id="n-redis">
+            <div class="node-icon">⚡</div>
+            <div class="node-name">Redis</div>
+            <div class="node-desc">Sessions · Cache · WebSocket pub/sub</div>
+          </div>
+          <div class="node purple" id="n-vector">
+            <div class="node-icon">◈</div>
+            <div class="node-name">Vector DB</div>
+            <div class="node-desc">Behavioral embeddings · Similarity search</div>
+          </div>
+          <div class="node gold" id="n-queue">
+            <div class="node-icon">↔</div>
+            <div class="node-name">Message Queue</div>
+            <div class="node-desc">Async events · Notification delivery · Integration sync</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.arch-diagram -->
+    <svg id="connections-svg" class="connections-svg"></svg>
+  </div><!-- /.arch-wrapper -->
+
+  <!-- Tabs -->
+  <div class="tabs-row">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('flow')">Data Flow</button>
+      <button class="tab" onclick="switchTab('tradeoffs')">Tradeoffs</button>
+      <button class="tab" onclick="switchTab('risks')">Risk & Mitigation</button>
+    </div>
+  </div>
+
+  <!-- ── Tab: Data Flow ──────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-flow">
+    <div class="flow-list">
+
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Calendar Sync & Event Ingestion</div>
+          <div class="step-detail">Google Calendar and Outlook push webhook notifications on every calendar mutation (create / update / delete). Apple CalDAV is polled every 5 minutes — no webhook support. All incoming events are normalized to a canonical schema <code>{ id, title, start, end, attendees[], calendarId }</code> and written to PostgreSQL. Duplicates are deduplicated by provider event ID with an upsert.</div>
+          <div class="step-pills">
+            <span class="pill g">Calendar Sync</span>
+            <span class="pill">Google / Outlook webhooks</span>
+            <span class="pill">Apple CalDAV (poll)</span>
+            <span class="pill b">PostgreSQL</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Conflict Detection — Sweep-Line Algorithm</div>
+          <div class="step-detail">On every calendar upsert, the Conflict Engine runs an O(n log n) sweep-line over the user's next 14-day window. Events are sorted by start time; an interval tree detects overlaps. Only events the user is marked "accepted" on are included. Conflicts are scored by severity (full overlap vs partial) and stored as a pending conflict record.</div>
+          <div class="step-pills">
+            <span class="pill g">Conflict Engine</span>
+            <span class="pill b">Events DB (Postgres)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Layer 1 — Rule Evaluation</div>
+          <div class="step-detail">User-defined JSON predicate rules are loaded from PostgreSQL and evaluated first. Rules check meeting categories, organizer, attendee count, and user-set priorities (e.g. "Engineering &gt; Cross-functional"). A rule match with confidence ≥ 0.9 proposes a resolution without calling the AI — keeping resolution latency under 80ms and avoiding Claude API costs for routine conflicts (estimated 60–70% of all conflicts).</div>
+          <div class="step-pills">
+            <span class="pill g">Conflict Engine</span>
+            <span class="pill b">Rules DB (Postgres)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Layer 2 — AI Suggestion via Claude</div>
+          <div class="step-detail">When rules don't fire or confidence is low, the AI Orchestrator builds a context-rich prompt: conflicting events, attendee roles, user's free-time blocks (queried from Postgres), and the top-5 most similar past decisions retrieved via cosine similarity from the Vector DB. Claude is instructed to return structured JSON: <code>{ keepEvent, declineEvent, altTime, draftMessage, reasoning }</code>. The response is validated against the schema; malformed responses fall through to Layer 3 (manual).</div>
+          <div class="step-pills">
+            <span class="pill p">AI Orchestrator</span>
+            <span class="pill p">Claude API</span>
+            <span class="pill p">Vector DB (behavioral context)</span>
+            <span class="pill b">Free-slots (Postgres)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">User Approval & Decline Message</div>
+          <div class="step-detail">The conflict suggestion is pushed to the connected client via WebSocket (sub-200ms) and simultaneously queued as a push notification fallback. The user sees the AI suggestion with the draft decline message pre-filled and editable. On approval, the Conflict Engine calls the calendar provider API to decline the event, updates the conflict record to "resolved", and fires a behavioral memory write — the decision is embedded and stored in the Vector DB for future context retrieval.</div>
+          <div class="step-pills">
+            <span class="pill a">Notification Svc</span>
+            <span class="pill">WebSocket (Gateway)</span>
+            <span class="pill g">Calendar Sync → Provider API</span>
+            <span class="pill p">Behavioral Memory → Vector DB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Attendance Tracking</div>
+          <div class="step-detail">A scheduled job queries all meetings that ended 5 minutes ago and publishes an attendance-check event to the Message Queue. The Notification Service consumes it and sends a push/in-app nudge. User's yes/no response is stored and fed into the Behavioral Memory Engine — attended meetings reinforce the priority model, missed ones flag patterns (e.g., recurring Thursday 3 PM misses).</div>
+          <div class="step-pills">
+            <span class="pill a">Notification Svc</span>
+            <span class="pill a">Message Queue (scheduled job)</span>
+            <span class="pill p">Behavioral Memory</span>
+            <span class="pill b">PostgreSQL (attendance log)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-title">Follow-up Capture & Async Integration Sync</div>
+          <div class="step-detail">After attendance confirmation, the AI Orchestrator generates meeting-context-aware follow-up suggestions (meeting title + attendees → Claude prompt). User selects/edits suggestions and chooses a destination integration. Follow-up Manager publishes sync tasks to the Message Queue — integration calls (Notion API, Jira API) are processed asynchronously to handle rate limits and partial failures without blocking the user. Integration failures are retried with exponential backoff; permanent failures surface as in-app notifications.</div>
+          <div class="step-pills">
+            <span class="pill p">AI Orchestrator</span>
+            <span class="pill b">Follow-up Mgr</span>
+            <span class="pill a">Message Queue (async)</span>
+            <span class="pill">Notion / Jira APIs</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Tab: Tradeoffs ──────────────────────────────────── -->
+  <div class="tab-panel" id="tab-tradeoffs">
+    <div class="card-grid">
+
+      <div class="icard">
+        <span class="icard-tag tag-to">Tradeoff</span>
+        <div class="icard-title">Rules-First, AI-Second Routing</div>
+        <div class="icard-body">
+          <strong>Decision:</strong> Rules evaluate before AI on every conflict.<br><br>
+          <strong>Pro:</strong> Eliminates AI latency and cost for predictable conflicts (est. 60–70%). Sub-80ms resolution for rule matches; no Claude API call needed.<br><br>
+          <strong>Con:</strong> Rules require user setup — cold-start users see AI-heavy, slower experience. Rules can conflict with each other and need explicit priority ordering. Maintenance burden grows as users create complex rule sets.
+        </div>
+      </div>
+
+      <div class="icard">
+        <span class="icard-tag tag-to">Tradeoff</span>
+        <div class="icard-title">Freemium on AI Core Features</div>
+        <div class="icard-body">
+          <strong>Decision:</strong> AI conflict resolution + behavioral memory are free. Advanced integrations (Notion, Jira) and unlimited features are $9/mo.<br><br>
+          <strong>Pro:</strong> Eliminates the paywall for the core value proposition. Users experience AI benefit before any payment friction.<br><br>
+          <strong>Con:</strong> Claude API costs are incurred per free user per conflict. Need a hard free-tier cap (~15 AI calls/month/user) to prevent cost blowout. Estimated free-tier cost: $0.30–$0.60/user/month at current Claude pricing.
+        </div>
+      </div>
+
+      <div class="icard">
+        <span class="icard-tag tag-to">Tradeoff</span>
+        <div class="icard-title">PWA-First vs Native App</div>
+        <div class="icard-body">
+          <strong>Decision:</strong> PWA for MVP, native shell added later.<br><br>
+          <strong>Pro:</strong> Single codebase, instant updates, no app store friction or review delays.<br><br>
+          <strong>Con:</strong> iOS Safari has limited push notification support for PWAs (added in iOS 16.4, but unreliable). Background calendar sync requires server-side polling for the Apple CalDAV integration. These gaps create a weaker experience for iPhone users — the most valuable mobile segment for this product.
+        </div>
+      </div>
+
+      <div class="icard">
+        <span class="icard-tag tag-in">Insight</span>
+        <div class="icard-title">Webhook vs Polling — Protocol Asymmetry</div>
+        <div class="icard-body">
+          Google Calendar and Outlook support push webhooks (events arrive in &lt;2s). Apple CalDAV has no webhook support — polling every 5 minutes is the only option. This creates a two-tier experience: Google/Outlook users get near-instant conflict detection, Apple users get up to 5-minute lag.<br><br>
+          <strong>Implication:</strong> Marketing and onboarding should set expectation for Apple users. Mitigated by polling more aggressively (1 min) for users with active conflicts.
+        </div>
+      </div>
+
+      <div class="icard">
+        <span class="icard-tag tag-in">Insight</span>
+        <div class="icard-title">Behavioral Memory via Vector Embeddings</div>
+        <div class="icard-body">
+          User decisions are encoded as vector embeddings rather than stored as raw logs. At AI prompt time, a cosine similarity search retrieves the 5 most contextually relevant past decisions.<br><br>
+          This keeps prompt length bounded regardless of how long the user has used the product, avoids storing PII in prompts, and enables personalization that improves over time without any explicit model fine-tuning. Cold-start is handled by an onboarding preferences survey that seeds initial embedding clusters.
+        </div>
+      </div>
+
+      <div class="icard">
+        <span class="icard-tag tag-in">Insight</span>
+        <div class="icard-title">Structured JSON Output from Claude</div>
+        <div class="icard-body">
+          Claude is constrained to return a typed schema: <code>{ keepEvent, declineEvent, altTime, draftMessage, reasoning }</code>. This makes the conflict resolver fully deterministic — no text parsing, no ambiguity.<br><br>
+          A validation layer catches malformed or out-of-schema responses and falls back to Layer 3 (manual resolution) rather than presenting invalid data to the user. Claude's constrained output mode also measurably reduces hallucination in structured fields like <code>altTime</code>.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Tab: Risks ──────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-risks">
+    <div class="card-grid-2">
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-hi" style="margin-bottom:0;">High Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">External Dependency</span>
+        </div>
+        <div class="icard-title">Calendar API Rate Limits</div>
+        <div class="icard-body">Google Calendar imposes 1M queries/day per project and 10 req/sec per user. Webhook bursts during peak business hours (9–10 AM) could exhaust per-user quotas. <strong>Mitigation:</strong> Per-user request budgets tracked in Redis. Exponential backoff with jitter on all calendar API calls. Batch reads during off-peak resync windows. Separate GCP projects per 500 users to distribute quota.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-hi" style="margin-bottom:0;">High Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">Privacy / Compliance</span>
+        </div>
+        <div class="icard-title">Calendar PII in AI Prompts</div>
+        <div class="icard-body">Meeting titles, attendee names, and descriptions sent to Claude may contain sensitive PII or confidential project names. <strong>Mitigation:</strong> Pseudonymize attendee names before sending (replace with role hashes). Allow users to flag calendar categories as "private" — excluded from AI prompts. Anthropic zero-retention API mode for all prompts. DPA (Data Processing Agreement) executed with Anthropic before launch.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-hi" style="margin-bottom:0;">High Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">Core Feature Reliability</span>
+        </div>
+        <div class="icard-title">AI Hallucinating Invalid Time Slots</div>
+        <div class="icard-body">Claude could suggest a reschedule time that conflicts with another event or falls outside working hours. <strong>Mitigation:</strong> Hard architectural constraint — the AI only receives a pre-validated list of free blocks as selectable options. Free-slot computation is done by the service layer, not the AI. The AI picks from the list; it cannot invent new times. This eliminates the hallucination vector entirely for this field.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-hi" style="margin-bottom:0;">High Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">UX / Trust</span>
+        </div>
+        <div class="icard-title">Unsolicited Decline Messages Sent</div>
+        <div class="icard-body">A bug or misunderstood UX could cause a decline message to send before user review, damaging professional relationships. <strong>Mitigation:</strong> Hard constraint in MVP: decline messages are <em>always</em> shown in a review modal before sending. Zero autonomous sends in MVP phase. A separate "allow autonomous sends" toggle in settings defaults to OFF. The send action requires an explicit secondary confirmation click. No "undo" period — the constraint is prevention, not recovery.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-me" style="margin-bottom:0;">Medium Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">Compliance</span>
+        </div>
+        <div class="icard-title">FERPA Exposure for Student Users</div>
+        <div class="icard-body">Students using .edu Google/Outlook accounts have FERPA protections that may extend to meeting data (course discussions, advisor meetings, grade reviews). <strong>Mitigation:</strong> Separate data processing policies for .edu email domains. Opt-in consent flow for students that explicitly discloses AI processing. No training on student data under any circumstances. FERPA BAA required before pursuing institutional (B2B) deals with universities.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-me" style="margin-bottom:0;">Medium Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">Cost</span>
+        </div>
+        <div class="icard-title">Claude API Cost at Free-Tier Scale</div>
+        <div class="icard-body">Each conflict resolution: ~$0.01–0.04 depending on context length. At 10K free users averaging 5 AI resolutions/month = $500–$2,000/month in AI costs before meaningful revenue. <strong>Mitigation:</strong> Rules-first routing reduces AI calls by ~65%. Free tier hard cap: 15 AI calls/month (soft UI warning at 10). Prompt caching for behavioral memory context (significant savings on repeated context blocks). Monitor cost-per-user weekly; adjust cap if CAC math breaks.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-lo" style="margin-bottom:0;">Low Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">Infrastructure</span>
+        </div>
+        <div class="icard-title">WebSocket Scaling Under Load</div>
+        <div class="icard-body">Real-time conflict push via WebSocket requires sticky sessions or a shared pub/sub layer for horizontal scaling. A single instance works for MVP but won't survive 10K+ concurrent connections. <strong>Mitigation:</strong> Redis Pub/Sub as the WebSocket message bus from day one — all instances subscribe to user-scoped channels. This makes horizontal scaling stateless. Connection limits per instance (500) with load balancer health checks. Graceful degradation: fall back to polling if WebSocket drops.</div>
+      </div>
+
+      <div class="icard">
+        <div class="risk-meta">
+          <span class="icard-tag tag-lo" style="margin-bottom:0;">Low Risk</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-lt);">UX / Onboarding</span>
+        </div>
+        <div class="icard-title">Behavioral Memory Cold Start</div>
+        <div class="icard-body">New users have zero behavioral embeddings — the AI operates on generic rules for the first 2–4 weeks, which reduces personalization quality and increases the chance of a wrong suggestion that erodes trust early. <strong>Mitigation:</strong> Onboarding survey (5 questions: work hours, meeting priority, common categories, decline comfort level) generates seed embeddings that approximate a 2-week usage profile. Transparent UI: show users "AI is still learning your preferences" during the early period with a progress indicator that reflects actual decision count.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /#page -->
+
+<script>
+function switchTab(id) {
+  const ids = ['flow', 'tradeoffs', 'risks'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ids[i] === id));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ── SVG Connection Drawing ──────────────────────────────
+const CONNECTIONS = [
+  { from: 'n-web',      to: 'n-gateway', color: '#3D7552', dash: '5 4' },
+  { from: 'n-mobile',   to: 'n-gateway', color: '#3D7552', dash: '5 4' },
+  { from: 'n-gateway',  to: 'n-calsync', color: '#3D7552', dash: '5 4' },
+  { from: 'n-gateway',  to: 'n-conflict',color: '#B4643C', dash: '5 4' },
+  { from: 'n-gateway',  to: 'n-notify',  color: '#C9A84C', dash: '4 5' },
+  { from: 'n-conflict', to: 'n-ai',      color: '#7B5EA7', dash: '3 4' },
+  { from: 'n-calsync',  to: 'n-gcal',    color: '#8A8680', dash: '4 5' },
+  { from: 'n-calsync',  to: 'n-outlook', color: '#8A8680', dash: '4 5' },
+  { from: 'n-calsync',  to: 'n-apple',   color: '#8A8680', dash: '4 5' },
+  { from: 'n-ai',       to: 'n-claude',  color: '#7B5EA7', dash: '3 4' },
+  { from: 'n-followup', to: 'n-notion',  color: '#3A6B9A', dash: '4 5' },
+  { from: 'n-followup', to: 'n-jira',    color: '#3A6B9A', dash: '4 5' },
+  { from: 'n-calsync',  to: 'n-postgres',color: '#3A6B9A', dash: '3 5' },
+  { from: 'n-conflict', to: 'n-postgres',color: '#3A6B9A', dash: '3 5' },
+  { from: 'n-memory',   to: 'n-vector',  color: '#7B5EA7', dash: '3 4' },
+  { from: 'n-notify',   to: 'n-queue',   color: '#C9A84C', dash: '4 5' },
+  { from: 'n-gateway',  to: 'n-redis',   color: '#3A6B9A', dash: '3 5' },
+];
+
+// SVG arrow marker colors
+const MARKER_COLORS = ['#3D7552','#7B5EA7','#C9A84C','#3A6B9A','#8A8680','#B4643C'];
+
+function makeMarker(svg, color) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const id = 'arr-' + color.replace('#','');
+  const marker = document.createElementNS(ns, 'marker');
+  marker.setAttribute('id', id);
+  marker.setAttribute('markerWidth', '6');
+  marker.setAttribute('markerHeight', '6');
+  marker.setAttribute('refX', '5');
+  marker.setAttribute('refY', '3');
+  marker.setAttribute('orient', 'auto');
+  const poly = document.createElementNS(ns, 'polygon');
+  poly.setAttribute('points', '0 0, 6 3, 0 6');
+  poly.setAttribute('fill', color);
+  poly.setAttribute('opacity', '0.55');
+  marker.appendChild(poly);
+  return marker;
+}
+
+function drawConnections() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svgEl = document.getElementById('connections-svg');
+  const wrapper = document.getElementById('arch-wrapper');
+  const wRect = wrapper.getBoundingClientRect();
+
+  const W = wrapper.offsetWidth;
+  const H = wrapper.offsetHeight;
+  svgEl.setAttribute('width', W);
+  svgEl.setAttribute('height', H);
+  svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+  svgEl.replaceChildren();
+
+  const defs = document.createElementNS(ns, 'defs');
+  MARKER_COLORS.forEach(c => defs.appendChild(makeMarker(svgEl, c)));
+  svgEl.appendChild(defs);
+
+  CONNECTIONS.forEach((conn, idx) => {
+    const fromEl = document.getElementById(conn.from);
+    const toEl   = document.getElementById(conn.to);
+    if (!fromEl || !toEl) return;
+
+    const fR = fromEl.getBoundingClientRect();
+    const tR = toEl.getBoundingClientRect();
+
+    // right-center of source → left-center of target
+    const x1 = fR.right  - wRect.left;
+    const y1 = fR.top + fR.height / 2 - wRect.top;
+    const x2 = tR.left   - wRect.left;
+    const y2 = tR.top + tR.height / 2 - wRect.top;
+
+    const dx = Math.abs(x2 - x1) * 0.45;
+
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + (x1+dx) + ',' + y1 + ',' + (x2-dx) + ',' + y2 + ',' + x2 + ',' + y2);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', conn.color);
+    path.setAttribute('stroke-width', '1.4');
+    path.setAttribute('stroke-opacity', '0.42');
+    path.setAttribute('stroke-dasharray', conn.dash);
+    path.setAttribute('marker-end', 'url(#arr-' + conn.color.replace('#','') + ')');
+    path.style.animation = 'dashFlow ' + (2.2 + (idx % 5) * 0.4).toFixed(1) + 's linear infinite';
+    path.style.animationDelay = (idx * 0.12).toFixed(2) + 's';
+    svgEl.appendChild(path);
+  });
+}
+
+// Dash animation keyframe injected once
+(function() {
+  const s = document.createElement('style');
+  s.textContent = '@keyframes dashFlow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }';
+  document.head.appendChild(s);
+})();
+
+window.addEventListener('load', () => setTimeout(drawConnections, 120));
+window.addEventListener('resize', drawConnections);
+</script>
+</body>
+</html>
