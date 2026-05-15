@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WBR — Dec 2–8, 2024 | Ecommerce Co.</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0a12; --surface: #13131f; --surface2: #1a1a2e;
+  --border: #2a2a3e; --accent: #6c63ff; --accent-dim: rgba(108,99,255,0.15);
+  --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+  --text: #e2e8f0; --muted: #64748b; --font: 'Inter', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; }
+
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:0 24px; height:52px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.topbar-logo { font-weight:700; font-size:15px; color:var(--accent); margin-right:12px; }
+.topbar-left { display:flex; align-items:center; }
+.topbar-period { font-size:13px; font-weight:500; }
+.topbar-div { color:var(--border); margin:0 12px; }
+.topbar-right { font-size:12px; color:var(--muted); }
+
+.events-banner {
+  margin-top:52px;
+  background:rgba(245,158,11,0.10); border-bottom:1px solid rgba(245,158,11,0.3);
+  padding:10px 24px; display:flex; align-items:flex-start; gap:10px; font-size:13px;
+}
+.events-banner strong { color:var(--amber); }
+
+.main { padding:24px; max-width:1380px; margin:0 auto; }
+
+.sec-hdr {
+  font-size:11px; font-weight:600; color:var(--muted);
+  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;
+}
+
+.kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+.kpi-label { font-size:12px; color:var(--muted); font-weight:500; margin-bottom:6px; }
+.kpi-val { font-size:28px; font-weight:700; margin-bottom:10px; }
+.badges { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.badge {
+  font-size:11px; font-weight:600; padding:3px 8px; border-radius:4px;
+  display:inline-flex; align-items:center; gap:3px;
+}
+.b-up   { background:rgba(16,185,129,0.15); color:var(--green); }
+.b-down { background:rgba(239,68,68,0.15); color:var(--red); }
+.b-warn { background:rgba(245,158,11,0.15); color:var(--amber); }
+.b-ctx  { background:rgba(108,99,255,0.15); color:#a5b4fc; }
+.b-neu  { background:rgba(100,116,139,0.15); color:var(--muted); }
+
+.flag {
+  display:flex; align-items:flex-start; gap:8px;
+  background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25);
+  border-radius:6px; padding:9px 12px; font-size:12px; color:#fcd34d;
+  line-height:1.5; margin-top:10px;
+}
+.flag-icon { color:var(--amber); flex-shrink:0; }
+
+.lfl-panel {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:20px; margin-bottom:24px;
+}
+.lfl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:12px; }
+.lfl-val { font-size:22px; font-weight:700; margin:4px 0; }
+.lfl-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+.tab-btns {
+  display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px;
+}
+.tab-btn {
+  background:none; border:none; border-bottom:2px solid transparent;
+  margin-bottom:-1px; cursor:pointer; font-family:var(--font);
+  font-size:13px; font-weight:500; color:var(--muted);
+  padding:10px 20px; transition:all 0.15s;
+}
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:20px; margin-bottom:16px;
+}
+.card-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+.card-sub { font-size:12px; color:var(--muted); margin-bottom:14px; }
+.chart-wrap { position:relative; height:220px; }
+.chart-wrap-lg { position:relative; height:260px; }
+
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+.mt { margin-bottom:16px; }
+
+.tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th {
+  text-align:left; font-size:11px; font-weight:600; color:var(--muted);
+  text-transform:uppercase; letter-spacing:0.06em;
+  padding:8px 12px; border-bottom:1px solid var(--border);
+}
+.tbl td { padding:10px 12px; border-bottom:1px solid rgba(42,42,62,0.5); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:rgba(108,99,255,0.04); }
+
+.funnel-pair { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.funnel-col-lbl { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+.f-stage {
+  background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+  padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
+}
+.f-stage.hi { border-color:var(--accent); }
+.f-stage-name { font-size:13px; font-weight:500; }
+.f-stage-rate { font-size:11px; color:var(--muted); }
+.f-stage-val { font-size:16px; font-weight:700; }
+.f-drop { text-align:center; font-size:11px; color:var(--muted); padding:3px 0; }
+
+.hm-grid {
+  display:grid; grid-template-columns:auto 1fr 1fr;
+  gap:1px; background:var(--border); border-radius:8px; overflow:hidden; margin-top:12px;
+}
+.hm-cell { background:var(--surface); padding:12px 16px; text-align:center; }
+.hm-hdr { background:var(--surface2); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; }
+.hm-lbl { background:var(--surface2); font-size:12px; font-weight:500; text-align:left; }
+.hm-val { font-size:16px; font-weight:700; }
+.heat-lo { background:rgba(16,185,129,0.12); }
+.heat-md { background:rgba(245,158,11,0.12); }
+.heat-hi { background:rgba(239,68,68,0.12); }
+
+.rev-pair { display:flex; gap:12px; align-items:stretch; margin-top:12px; }
+.rev-item { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; }
+.rev-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+.rev-val { font-size:22px; font-weight:700; }
+.rev-op { display:flex; align-items:center; font-size:22px; color:var(--muted); padding:0 4px; }
+
+.tkb { display:flex; align-items:center; gap:16px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; }
+.tkb-num { font-size:28px; font-weight:700; }
+.tkb-lbl { font-size:12px; color:var(--muted); }
+.tkb-div { width:1px; height:40px; background:var(--border); }
+
+.insight-box {
+  background:var(--accent-dim); border:1px solid rgba(108,99,255,0.2);
+  border-radius:6px; padding:12px 16px; font-size:12px; color:#c4b5fd;
+  margin-top:14px; line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-logo">Ecommerce Co.</span>
+    <span class="topbar-div">|</span>
+    <span class="topbar-period">Weekly Business Review &nbsp;·&nbsp; Dec 2–8, 2024</span>
+  </div>
+  <div class="topbar-right">Last refreshed: Mon Dec 9, 2024 · 06:00 UTC</div>
+</header>
+
+<div class="events-banner">
+  <span style="color:var(--amber);font-size:15px;">⚠</span>
+  <span><strong>Black Friday / Cyber Monday</strong> occurred Nov 29–Dec 1 in the <strong>prior week</strong>. WoW comparisons reflect this 3–4× traffic event. Refer to the Like-for-Like panel for adjusted comparison.</span>
+</div>
+
+<main class="main">
+
+  <div class="sec-hdr">Executive Summary — All VPs</div>
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-val">$308,922</div>
+      <div class="badges">
+        <span class="badge b-down">▼ 59.1% WoW</span>
+        <span class="badge b-up">▲ 13.2% MoM</span>
+        <span class="badge b-ctx">BF in prior week</span>
+      </div>
+      <div class="flag">
+        <span class="flag-icon">⚠</span>
+        <span>Revenue down 59.1% WoW. Prior week contained Black Friday (Nov 29) — a 3–4× traffic event. Change is within expected post-BF normalization. MoM comparison vs clean baseline is +13.2%. Refer to LfL panel below.</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Total Visitors</div>
+      <div class="kpi-val">82,156</div>
+      <div class="badges">
+        <span class="badge b-down">▼ 46.2% WoW</span>
+        <span class="badge b-up">▲ 9.5% MoM</span>
+        <span class="badge b-ctx">BF in prior week</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Total Purchases</div>
+      <div class="kpi-val">3,688</div>
+      <div class="badges">
+        <span class="badge b-down">▼ 47.0% WoW</span>
+        <span class="badge b-up">▲ 8.5% MoM</span>
+        <span class="badge b-ctx">BF in prior week</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="lfl-panel">
+    <div class="sec-hdr" style="margin-bottom:4px;">Like-for-Like — Mon–Thu Only, Excluding Event Days</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Dec 2–5 vs Nov 25–28 &nbsp;·&nbsp; Black Friday period (Nov 29–Dec 1) excluded from both sides</div>
+    <div class="lfl-grid">
+      <div>
+        <div style="font-size:12px;color:var(--muted);">LfL Revenue</div>
+        <div class="lfl-val">$174,184</div>
+        <div class="badges"><span class="badge b-up">▲ 10.1%</span></div>
+        <div class="lfl-sub">Prior Mon–Thu: $158,274</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);">LfL Visitors</div>
+        <div class="lfl-val">47,415</div>
+        <div class="badges"><span class="badge b-up">▲ 1.1%</span></div>
+        <div class="lfl-sub">Prior Mon–Thu: 46,883</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);">LfL AOV</div>
+        <div class="lfl-val">$82.98</div>
+        <div class="badges"><span class="badge b-up">▲ 7.2%</span></div>
+        <div class="lfl-sub">Prior Mon–Thu: $77.43</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-btns">
+    <button class="tab-btn active" data-tab="product">Product VP</button>
+    <button class="tab-btn" data-tab="revenue">Revenue / Finance VP</button>
+    <button class="tab-btn" data-tab="cx">Customer Experience VP</button>
+  </div>
+
+  <!-- ===== PRODUCT TAB ===== -->
+  <div class="tab-panel active" id="tab-product">
+
+    <div class="sec-hdr">Conversion Funnel</div>
+    <div class="card">
+      <div class="card-title">Full Conversion Funnel — Dec 2–8 vs Nov 25–Dec 1</div>
+      <div class="card-sub">Stage rates with WoW comparison · Checkout conversion is near-optimal — ATC rate is the primary lever</div>
+      <div class="funnel-pair">
+        <div>
+          <div class="funnel-col-lbl">Dec 2–8 (Current)</div>
+          <div class="f-stage"><div><div class="f-stage-name">Visitors</div><div class="f-stage-rate">Top of funnel</div></div><div class="f-stage-val">82,156</div></div>
+          <div class="f-drop">↓ ATC Rate 8.81%</div>
+          <div class="f-stage"><div><div class="f-stage-name">Add to Cart</div><div class="f-stage-rate">8.81% of visitors</div></div><div class="f-stage-val">7,238</div></div>
+          <div class="f-drop">↓ Checkout Rate 5.30% of visitors</div>
+          <div class="f-stage"><div><div class="f-stage-name">Checkouts</div><div class="f-stage-rate">5.30% of visitors</div></div><div class="f-stage-val">4,351</div></div>
+          <div class="f-drop">↓ Checkout Conversion 84.76%</div>
+          <div class="f-stage hi"><div><div class="f-stage-name">Purchases</div><div class="f-stage-rate">4.49% purchase rate</div></div><div class="f-stage-val" style="color:var(--accent);">3,688</div></div>
+        </div>
+        <div>
+          <div class="funnel-col-lbl">Nov 25–Dec 1 (Prior · BF Week)</div>
+          <div class="f-stage"><div><div class="f-stage-name">Visitors</div><div class="f-stage-rate">Top of funnel</div></div><div class="f-stage-val">152,620</div></div>
+          <div class="f-drop">↓ ATC Rate 9.20%</div>
+          <div class="f-stage"><div><div class="f-stage-name">Add to Cart</div><div class="f-stage-rate">9.20% of visitors</div></div><div class="f-stage-val">14,041</div></div>
+          <div class="f-drop">↓ Checkout Rate 5.43% of visitors</div>
+          <div class="f-stage"><div><div class="f-stage-name">Checkouts</div><div class="f-stage-rate">5.43% of visitors</div></div><div class="f-stage-val">8,283</div></div>
+          <div class="f-drop">↓ Checkout Conversion 84.00%</div>
+          <div class="f-stage" style="border-color:rgba(108,99,255,0.4);"><div><div class="f-stage-name">Purchases</div><div class="f-stage-rate">4.56% purchase rate</div></div><div class="f-stage-val" style="color:#a5b4fc;">6,958</div></div>
+        </div>
+      </div>
+      <div class="insight-box"><strong>Key insight:</strong> Checkout conversion (84.76%) is near-optimal and stable vs prior week (84.00%) — this stage is not an optimization target. ATC rate (8.81% vs 8.94% baseline) is the primary lever. A +1pp improvement in ATC rate adds ~820 additional purchases per week at current visitor volume.</div>
+    </div>
+
+    <div class="sec-hdr">Category Performance</div>
+    <div class="two-col mt">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">Revenue by Category</div>
+        <div class="card-sub">Dec 2–8, 2024</div>
+        <div class="chart-wrap"><canvas id="cat-rev"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">AOV by Category — Current vs Prior Week</div>
+        <div class="card-sub">Prior week AOV inflated by BF promotional pricing</div>
+        <div class="chart-wrap"><canvas id="cat-aov"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;"></div>
+
+    <div class="card">
+      <div class="card-title">Category Summary Table</div>
+      <div class="card-sub">Revenue · Purchases · AOV · Return Rate — Dec 2–8</div>
+      <table class="tbl">
+        <thead><tr><th>Category</th><th>Revenue</th><th>Purchases</th><th>AOV</th><th>Return Rate</th><th>WoW Purch</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Electronics</strong></td><td>$176,200</td><td>1,602</td><td>$110.00</td><td>14.8%</td><td><span class="badge b-down">▼ 48.2%</span></td></tr>
+          <tr><td><strong>Home Goods</strong></td><td>$132,722</td><td>2,086</td><td>$63.60</td><td>7.6%</td><td><span class="badge b-down">▼ 45.9%</span></td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">WoW purchase drops reflect Black Friday volume in prior week — not a demand signal. See LfL panel above.</div>
+    </div>
+
+    <div class="sec-hdr">Return Rate by Category × Segment</div>
+    <div class="card">
+      <div class="card-title">Return Rate Heatmap</div>
+      <div class="card-sub">Dec 2–8 · New customers return at structurally higher rates; Electronics returns elevated on weekend</div>
+      <div class="hm-grid">
+        <div class="hm-cell hm-hdr"></div>
+        <div class="hm-cell hm-hdr">New Customers</div>
+        <div class="hm-cell hm-hdr">Returning Customers</div>
+        <div class="hm-cell hm-lbl">Electronics</div>
+        <div class="hm-cell heat-hi"><div class="hm-val">17.2%</div></div>
+        <div class="hm-cell heat-md"><div class="hm-val">12.4%</div></div>
+        <div class="hm-cell hm-lbl">Home Goods</div>
+        <div class="hm-cell heat-lo"><div class="hm-val">9.1%</div></div>
+        <div class="hm-cell heat-lo"><div class="hm-val">6.2%</div></div>
+      </div>
+      <div class="flag" style="margin-top:14px;">
+        <span class="flag-icon">⚠</span>
+        <span>Electronics New Customer return rate at 17.2%. Dec 8 (Sunday) daily Electronics return rate reached 20.5% — 2× the Sunday average. Timing is consistent with the BF purchase return window: Nov 29 purchases + 9 days = Dec 8. This is 1.8 standard deviations from the 4-week Electronics baseline (16.2%).</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== REVENUE/FINANCE TAB ===== -->
+  <div class="tab-panel" id="tab-revenue">
+
+    <div class="sec-hdr">Revenue Trend</div>
+    <div class="card">
+      <div class="card-title">Daily Revenue — Current vs Prior Week</div>
+      <div class="card-sub">Dec 2–8 vs Nov 25–Dec 1 · Black Friday spike (Nov 29) compressed to same axis for context</div>
+      <div class="chart-wrap-lg"><canvas id="rev-trend"></canvas></div>
+    </div>
+
+    <div class="sec-hdr">AOV Breakdown</div>
+    <div class="two-col mt">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">AOV by Channel</div>
+        <div class="card-sub">Current vs prior week · Email channel commands a premium</div>
+        <div class="chart-wrap"><canvas id="aov-ch"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">AOV by Segment</div>
+        <div class="card-sub">Current vs prior week · New customers have higher first-order AOV</div>
+        <div class="chart-wrap"><canvas id="aov-seg"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;"></div>
+
+    <div class="card">
+      <div class="card-title">AOV Detail Grid</div>
+      <div class="card-sub">Channel × Segment — Dec 2–8 vs Nov 25–Dec 1</div>
+      <table class="tbl">
+        <thead><tr><th>Dimension</th><th>Share</th><th>Current AOV</th><th>Prior AOV</th><th>WoW</th></tr></thead>
+        <tbody>
+          <tr><td>Channel: Direct</td><td>~55% of visits</td><td>$79.80</td><td>$101.30</td><td><span class="badge b-down">▼ 21.2%</span></td></tr>
+          <tr><td>Channel: Email</td><td>~45% of visits</td><td>$88.40</td><td>$116.90</td><td><span class="badge b-down">▼ 24.4%</span></td></tr>
+          <tr><td>Segment: New</td><td>~48% of purchases</td><td>$93.10</td><td>$121.50</td><td><span class="badge b-down">▼ 23.4%</span></td></tr>
+          <tr><td>Segment: Returning</td><td>~52% of purchases</td><td>$75.20</td><td>$96.80</td><td><span class="badge b-down">▼ 22.3%</span></td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">WoW AOV drops reflect Black Friday promotional pricing in prior week — LfL AOV is +7.2% (see executive summary).</div>
+    </div>
+
+    <div class="sec-hdr">Net Revenue Estimate</div>
+    <div class="card">
+      <div class="card-title">Gross vs Net Revenue — Dec 2–8</div>
+      <div class="card-sub">Net = Gross × (1 − Return Rate) &nbsp;·&nbsp; Return rate this week: 10.44%</div>
+      <div class="rev-pair">
+        <div class="rev-item">
+          <div class="rev-lbl">Gross Revenue</div>
+          <div class="rev-val">$308,922</div>
+        </div>
+        <div class="rev-op">−</div>
+        <div class="rev-item" style="border-color:rgba(239,68,68,0.3);">
+          <div class="rev-lbl">Est. Returns Cost</div>
+          <div class="rev-val" style="color:var(--red);">$32,251</div>
+          <div style="font-size:11px;color:var(--muted);">10.44% return rate</div>
+        </div>
+        <div class="rev-op">=</div>
+        <div class="rev-item" style="border-color:rgba(16,185,129,0.3);">
+          <div class="rev-lbl">Net Revenue (est.)</div>
+          <div class="rev-val" style="color:var(--green);">$276,671</div>
+          <div style="font-size:11px;color:var(--muted);">89.6% of gross</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;">Prior week net: $754,354 × (1 − 10.79%) = $672,750. Return rate improved 0.35pp WoW — net margin is up slightly despite lower gross volume.</div>
+    </div>
+
+    <div class="sec-hdr">Support Ticket Rate</div>
+    <div class="card">
+      <div class="card-title">Tickets per 100 Purchases — Weekly Summary</div>
+      <div class="card-sub">Current week vs 4-week baseline (Nov 1–24)</div>
+      <div class="tkb">
+        <div><div class="tkb-num">4.23</div><div class="tkb-lbl">tickets / 100 purchases (week avg)</div></div>
+        <div class="tkb-div"></div>
+        <div><div style="font-size:18px;font-weight:600;">3.99</div><div class="tkb-lbl">4-week baseline average</div></div>
+        <div class="tkb-div"></div>
+        <div><span class="badge b-warn">▲ +6.0% vs baseline</span></div>
+      </div>
+      <div class="chart-wrap"><canvas id="tkrate"></canvas></div>
+      <div class="flag" style="margin-top:12px;">
+        <span class="flag-icon">⚠</span>
+        <span>Ticket rate at 4.23/100 purchases. Dec 2 daily rate reached 5.11/100 — 1.6 standard deviations above the 4-week baseline of 3.99. Change is within normal statistical variance at the weekly level. Note: support tickets lag purchases by 3–7 days — elevated Dec 2–4 volume is consistent with the BF purchase return window and is not a service quality signal.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== CX TAB ===== -->
+  <div class="tab-panel" id="tab-cx">
+
+    <div class="sec-hdr">Return Rate Overview</div>
+    <div class="two-col mt">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">Return Rate by Category</div>
+        <div class="card-sub">Dec 2–8 vs 4-week baseline (11.48% avg)</div>
+        <div class="chart-wrap"><canvas id="ret-cat"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">Return Rate by Day of Week</div>
+        <div class="card-sub">Dec 2–8 daily · Sunday structurally elevated (Electronics BF returns)</div>
+        <div class="chart-wrap"><canvas id="ret-dow"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;"></div>
+
+    <div class="sec-hdr">Support Ticket Volume</div>
+    <div class="card">
+      <div class="card-title">Daily Support Tickets — Current vs Prior Week</div>
+      <div class="card-sub">Dec 2–8 vs Nov 25–Dec 1 · BF spike drove 3–4× prior week ticket volume</div>
+      <div class="chart-wrap-lg"><canvas id="tkvol"></canvas></div>
+      <div class="flag" style="margin-top:12px;">
+        <span class="flag-icon">⚠</span>
+        <span>Dec 2–4 ticket volume (12, 18, 22) elevated vs typical Monday start. Consistent with BF post-purchase support lag: Nov 29 purchases + 3–5 days = Dec 2–4. Pattern normalizes to baseline by Dec 6–7. Not a service quality signal.</span>
+      </div>
+    </div>
+
+    <div class="sec-hdr">Ticket Rate Trend vs 4-Week Baseline</div>
+    <div class="card">
+      <div class="card-title">Daily Ticket Rate (per 100 purchases) — Dec 2–8</div>
+      <div class="card-sub">Baseline band: 3.49–4.49 (±1 SD around 3.99 mean)</div>
+      <div class="chart-wrap-lg"><canvas id="tktrend"></canvas></div>
+    </div>
+
+    <div class="sec-hdr">New vs Returning Customer Behavior</div>
+    <div class="card">
+      <div class="card-title">Segment Comparison — Dec 2–8, 2024</div>
+      <div class="card-sub">New customers: higher AOV, higher return rate &nbsp;·&nbsp; Returning customers: higher purchase rate, lower returns</div>
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th>New Customers</th><th>Returning Customers</th><th>Delta</th></tr></thead>
+        <tbody>
+          <tr><td>Share of Purchases</td><td>48.2% (1,778)</td><td>51.8% (1,910)</td><td>—</td></tr>
+          <tr><td>AOV</td><td>$93.10</td><td>$75.20</td><td><span class="badge b-ctx">New +23.8%</span></td></tr>
+          <tr><td>Purchase Rate</td><td>3.8%</td><td>5.3%</td><td><span class="badge b-ctx">Ret. +39.5%</span></td></tr>
+          <tr><td>Return Rate</td><td>12.8%</td><td>8.4%</td><td><span class="badge b-warn">New +52.4%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+  });
+});
+
+const C = {
+  purple: '#6c63ff', purpleA: 'rgba(108,99,255,0.18)',
+  green: '#10b981', greenA: 'rgba(16,185,129,0.15)',
+  amber: '#f59e0b', amberA: 'rgba(245,158,11,0.15)',
+  red: '#ef4444', redA: 'rgba(239,68,68,0.15)',
+  blue: '#38bdf8', blueA: 'rgba(56,189,248,0.15)',
+  muted: '#64748b', border: '#2a2a3e',
+};
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#2a2a3e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+
+const days = ['Mon 12/2','Tue 12/3','Wed 12/4','Thu 12/5','Fri 12/6','Sat 12/7','Sun 12/8'];
+
+// Revenue trend
+new Chart(document.getElementById('rev-trend'), {
+  type: 'line',
+  data: {
+    labels: days,
+    datasets: [
+      {
+        label: 'Dec 2–8',
+        data: [32000, 38000, 45000, 59184, 45000, 52000, 38000],
+        borderColor: C.purple, backgroundColor: C.purpleA,
+        fill: true, tension: 0.35, pointRadius: 4, borderWidth: 2,
+      },
+      {
+        label: 'Nov 25–Dec 1',
+        data: [55000, 57000, 60000, 70000, 230000, 150000, 132000],
+        borderColor: C.muted, backgroundColor: 'transparent',
+        borderDash: [5, 3], tension: 0.35, pointRadius: 3, borderWidth: 1.5,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } } },
+    scales: { y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: C.border } }, x: { grid: { color: C.border } } }
+  }
+});
+
+// Cat revenue
+new Chart(document.getElementById('cat-rev'), {
+  type: 'bar',
+  data: {
+    labels: ['Electronics', 'Home Goods'],
+    datasets: [{ label: 'Revenue', data: [176200, 132722], backgroundColor: [C.purple, C.blue], borderRadius: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// Cat AOV
+new Chart(document.getElementById('cat-aov'), {
+  type: 'bar',
+  data: {
+    labels: ['Electronics', 'Home Goods'],
+    datasets: [
+      { label: 'Current', data: [110.00, 63.60], backgroundColor: C.purple, borderRadius: 6 },
+      { label: 'Prior (BF)', data: [135.50, 78.20], backgroundColor: C.muted, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { ticks: { callback: v => '$' + v }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// AOV by channel
+new Chart(document.getElementById('aov-ch'), {
+  type: 'bar',
+  data: {
+    labels: ['Direct', 'Email'],
+    datasets: [
+      { label: 'Current', data: [79.80, 88.40], backgroundColor: C.purple, borderRadius: 6 },
+      { label: 'Prior', data: [101.30, 116.90], backgroundColor: C.muted, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { ticks: { callback: v => '$' + v }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// AOV by segment
+new Chart(document.getElementById('aov-seg'), {
+  type: 'bar',
+  data: {
+    labels: ['New', 'Returning'],
+    datasets: [
+      { label: 'Current', data: [93.10, 75.20], backgroundColor: C.green, borderRadius: 6 },
+      { label: 'Prior', data: [121.50, 96.80], backgroundColor: C.muted, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { ticks: { callback: v => '$' + v }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// Ticket rate daily
+new Chart(document.getElementById('tkrate'), {
+  type: 'line',
+  data: {
+    labels: days,
+    datasets: [
+      {
+        label: 'Ticket Rate / 100 purch',
+        data: [5.11, 4.62, 4.41, 4.30, 3.95, 3.78, 3.85],
+        borderColor: C.amber, backgroundColor: C.amberA,
+        fill: true, tension: 0.3, pointRadius: 4, borderWidth: 2,
+      },
+      {
+        label: 'Baseline 3.99',
+        data: [3.99, 3.99, 3.99, 3.99, 3.99, 3.99, 3.99],
+        borderColor: C.muted, borderDash: [5, 3],
+        fill: false, pointRadius: 0, borderWidth: 1.5,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { min: 2.5, ticks: { callback: v => v.toFixed(1) }, grid: { color: C.border } }, x: { grid: { color: C.border } } }
+  }
+});
+
+// Return by category
+new Chart(document.getElementById('ret-cat'), {
+  type: 'bar',
+  data: {
+    labels: ['Overall', 'Electronics', 'Home Goods'],
+    datasets: [
+      { label: 'Current', data: [10.44, 14.80, 7.60], backgroundColor: [C.amberA, C.redA, C.greenA], borderColor: [C.amber, C.red, C.green], borderWidth: 1.5, borderRadius: 6 },
+      { label: 'Baseline', data: [11.48, 16.20, 8.90], backgroundColor: 'transparent', borderColor: C.muted, borderWidth: 1.5, borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { max: 22, ticks: { callback: v => v + '%' }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// Return by day of week
+new Chart(document.getElementById('ret-dow'), {
+  type: 'bar',
+  data: {
+    labels: days,
+    datasets: [{
+      label: 'Daily Return Rate',
+      data: [9.2, 9.8, 10.1, 9.5, 10.8, 11.2, 12.1],
+      backgroundColor: [C.greenA, C.greenA, C.amberA, C.greenA, C.amberA, C.amberA, C.redA],
+      borderColor:     [C.green, C.green, C.amber, C.green, C.amber, C.amber, C.red],
+      borderWidth: 1.5, borderRadius: 5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => v + '%' }, grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// Ticket volume
+new Chart(document.getElementById('tkvol'), {
+  type: 'bar',
+  data: {
+    labels: days,
+    datasets: [
+      {
+        label: 'Dec 2–8',
+        data: [12, 18, 22, 25, 28, 30, 21],
+        backgroundColor: C.purpleA, borderColor: C.purple, borderWidth: 1.5, borderRadius: 5,
+      },
+      {
+        label: 'Nov 25–Dec 1',
+        data: [25, 28, 30, 35, 80, 65, 50],
+        backgroundColor: 'rgba(100,116,139,0.12)', borderColor: C.muted, borderWidth: 1.5, borderRadius: 5,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { grid: { color: C.border } }, x: { grid: { display: false } } }
+  }
+});
+
+// Ticket rate trend with band
+new Chart(document.getElementById('tktrend'), {
+  type: 'line',
+  data: {
+    labels: days,
+    datasets: [
+      {
+        label: 'Ticket Rate',
+        data: [5.11, 4.62, 4.41, 4.30, 3.95, 3.78, 3.85],
+        borderColor: C.amber, backgroundColor: 'transparent',
+        tension: 0.3, pointRadius: 5, borderWidth: 2,
+        pointBackgroundColor: C.amber,
+      },
+      {
+        label: 'Upper Band (4.49, +1 SD)',
+        data: [4.49, 4.49, 4.49, 4.49, 4.49, 4.49, 4.49],
+        borderColor: 'rgba(100,116,139,0.35)', borderDash: [4, 3],
+        fill: '+1', backgroundColor: 'rgba(100,116,139,0.07)',
+        pointRadius: 0, borderWidth: 1,
+      },
+      {
+        label: 'Lower Band (3.49, −1 SD)',
+        data: [3.49, 3.49, 3.49, 3.49, 3.49, 3.49, 3.49],
+        borderColor: 'rgba(100,116,139,0.35)', borderDash: [4, 3],
+        fill: false, pointRadius: 0, borderWidth: 1,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { min: 2, max: 6.5, ticks: { callback: v => v.toFixed(1) }, grid: { color: C.border } }, x: { grid: { color: C.border } } }
+  }
+});
+</script>
+</body>
+</html>

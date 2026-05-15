@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Analytics Bootcamp — Ecommerce Case Study</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg:#0a0a12;--surface:#111120;--surface2:#161628;--border:#1e1e35;--border2:#252540;
+  --text:#e2e8f0;--text2:#8892b0;--text3:#4b5680;
+  --purple:#8b5cf6;--purple-d:#6d28d9;--blue:#3b82f6;--cyan:#06b6d4;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,18,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:13px;font-weight:800;letter-spacing:-0.3px;background:linear-gradient(90deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.course-name{font-size:12px;color:var(--text3);border-left:1px solid var(--border);padding-left:14px;}
+.progress-wrap{display:flex;align-items:center;gap:10px;}
+.progress-bar-outer{width:140px;height:4px;background:var(--border);border-radius:2px;}
+.progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:2px;transition:width .4s ease;}
+.progress-label{font-size:11px;color:var(--text3);}
+
+.shell{display:flex;margin-top:56px;min-height:calc(100vh - 56px);}
+
+.sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.sidebar-section{padding:0 16px;margin-bottom:6px;}
+.sidebar-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);padding:8px 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:2px;font-size:12.5px;color:var(--text2);}
+.nav-item:hover{background:var(--border);color:var(--text);}
+.nav-item.active{background:rgba(139,92,246,.15);color:var(--purple);font-weight:600;}
+.nav-item.completed .nav-num{background:var(--green);color:white;}
+.nav-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--border2);color:var(--text3);flex-shrink:0;}
+.nav-item.active .nav-num{background:var(--purple);color:white;}
+.nav-text{line-height:1.3;}
+.nav-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+.nav-item.active .nav-sub{color:rgba(139,92,246,.7);}
+
+.main{flex:1;padding:40px 48px;max-width:820px;}
+
+.module{display:none;}
+.module.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.module-header{margin-bottom:32px;}
+.module-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:20px;margin-bottom:12px;}
+.module-header h2{font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;}
+.module-header .lead{font-size:14.5px;color:var(--text2);margin-top:10px;line-height:1.7;max-width:640px;}
+
+.concept{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin-bottom:22px;}
+.concept-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.concept h3{font-size:15px;font-weight:700;margin-bottom:8px;}
+.concept p{font-size:13.5px;color:var(--text2);line-height:1.7;}
+.concept ul{padding-left:18px;margin-top:8px;}
+.concept li{font-size:13.5px;color:var(--text2);line-height:1.8;}
+.concept li strong{color:var(--text);}
+
+.data-callout{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0;}
+.dc{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;flex:1;min-width:140px;}
+.dc .dc-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.dc .dc-val{font-size:22px;font-weight:800;}
+.dc .dc-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+.quiz-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin:22px 0;}
+.quiz-q{font-size:14.5px;font-weight:600;line-height:1.5;margin-bottom:16px;}
+.q-label{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--yellow);background:rgba(245,158,11,.1);padding:2px 10px;border-radius:10px;margin-bottom:8px;}
+.quiz-options{display:flex;flex-direction:column;gap:8px;}
+.quiz-opt{display:flex;align-items:flex-start;gap:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .15s;font-size:13.5px;color:var(--text2);}
+.quiz-opt:hover:not(.disabled){border-color:var(--purple);color:var(--text);background:rgba(139,92,246,.06);}
+.quiz-opt.correct{border-color:var(--green);background:rgba(16,185,129,.08);color:var(--text);}
+.quiz-opt.wrong{border-color:var(--red);background:rgba(239,68,68,.06);color:var(--text2);opacity:.7;}
+.quiz-opt.disabled{cursor:default;}
+.opt-letter{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(--border2);color:var(--text3);}
+.quiz-opt.correct .opt-letter{background:var(--green);color:white;}
+.quiz-opt.wrong .opt-letter{background:var(--red);color:white;}
+.quiz-explanation{margin-top:16px;padding:14px 16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:13px;color:var(--text2);line-height:1.6;display:none;}
+.quiz-explanation.show{display:block;animation:fadeIn .3s ease;}
+.quiz-explanation .ex-good{color:var(--green);font-weight:700;}
+.quiz-explanation .ex-bad{color:var(--red);font-weight:700;}
+
+.reveal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;}
+.reveal-card{background:var(--surface2);border:1px dashed var(--border2);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .2s;position:relative;}
+.reveal-card .reveal-hint{font-size:12px;color:var(--text3);text-align:center;padding:16px 0;}
+.reveal-card .reveal-inner{display:none;}
+.reveal-card.revealed{border-style:solid;border-color:var(--border);}
+.reveal-card.revealed .reveal-hint{display:none;}
+.reveal-card.revealed .reveal-inner{display:block;animation:fadeIn .3s ease;}
+.reveal-card:hover:not(.revealed){border-color:var(--purple);}
+.reveal-inner .r-title{font-size:12px;font-weight:700;margin-bottom:6px;}
+.reveal-inner .r-body{font-size:12px;color:var(--text2);line-height:1.5;}
+.reveal-inner .r-stat{font-size:20px;font-weight:800;margin-bottom:4px;}
+
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin:18px 0;}
+.chart-box h4{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px;}
+.chart-box canvas{max-height:200px;}
+
+.scenario{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin:22px 0;}
+.scenario-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--orange);margin-bottom:10px;}
+.scenario h3{font-size:15px;font-weight:700;margin-bottom:10px;}
+.scenario .s-context{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;}
+.scenario-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.s-opt{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .2s;font-size:13px;}
+.s-opt:hover{border-color:var(--blue);background:rgba(59,130,246,.05);}
+.s-opt .s-opt-label{font-weight:700;font-size:12px;color:var(--text3);margin-bottom:4px;}
+.s-opt .s-opt-text{color:var(--text2);line-height:1.4;}
+.s-result{margin-top:16px;padding:16px 18px;border-radius:10px;font-size:13px;line-height:1.6;display:none;}
+.s-result.show{display:block;animation:fadeIn .3s ease;}
+.s-result.good{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);color:var(--text2);}
+.s-result.ok{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);color:var(--text2);}
+.s-result.bad{background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);color:var(--text2);}
+.s-result .r-good{color:var(--green);font-weight:700;}
+.s-result .r-bad{color:var(--red);font-weight:700;}
+.s-result .r-ok{color:var(--yellow);font-weight:700;}
+
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.m-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:center;}
+.m-pill:hover{border-color:var(--text3);}
+.m-pill.selected{border-color:var(--purple);background:rgba(139,92,246,.1);}
+.m-pill .m-name{font-size:12px;font-weight:700;margin-bottom:3px;}
+.m-pill .m-why{font-size:10px;color:var(--text3);line-height:1.3;}
+.m-pill.selected .m-why{color:rgba(139,92,246,.8);}
+.picker-result{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2);line-height:1.6;min-height:80px;}
+.metric-detail{display:none;}
+.metric-detail.active{display:block;animation:fadeIn .3s ease;}
+.md-line{margin-bottom:6px;font-size:13px;line-height:1.6;}
+.md-line .md-label{font-weight:600;color:var(--text);}
+
+.hyp-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:12.5px;}
+.hyp-table th{text-align:left;padding:8px 12px;color:var(--text3);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border2);}
+.hyp-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.hyp-table tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;}
+.badge.confirmed{background:rgba(16,185,129,.15);color:#34d399;}
+.badge.partial{background:rgba(245,158,11,.15);color:#fbbf24;}
+
+.takeaway{background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(6,182,212,.06));border:1px solid rgba(139,92,246,.25);border-radius:12px;padding:18px 22px;margin:22px 0;}
+.takeaway .t-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--purple);margin-bottom:8px;}
+.takeaway p{font-size:13.5px;color:var(--text);line-height:1.7;}
+.takeaway ul{padding-left:18px;margin-top:6px;}
+.takeaway li{font-size:13.5px;color:var(--text2);line-height:1.8;}
+.takeaway li strong{color:var(--text);}
+
+.nav-buttons{display:flex;justify-content:space-between;align-items:center;margin-top:40px;padding-top:24px;border-top:1px solid var(--border);}
+.btn{padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--text3);color:var(--text);}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple-d));color:white;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+
+.funnel-visual{margin:18px 0;}
+.fv-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.fv-label{width:120px;font-size:12px;color:var(--text2);text-align:right;flex-shrink:0;}
+.fv-bar-wrap{flex:1;height:32px;background:var(--border);border-radius:6px;overflow:hidden;}
+.fv-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;transition:width 1s cubic-bezier(.4,0,.2,1);width:0%;}
+.fv-bar span{font-size:11px;font-weight:700;color:white;white-space:nowrap;}
+.fv-pct{width:50px;font-size:11px;color:var(--text3);flex-shrink:0;}
+
+.completion-banner{background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(6,182,212,.06));border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:28px 32px;text-align:center;margin:24px 0;display:none;}
+.completion-banner.show{display:block;animation:fadeIn .5s ease;}
+.completion-banner .cb-icon{font-size:40px;margin-bottom:12px;}
+.completion-banner h3{font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px;}
+.completion-banner p{font-size:14px;color:var(--text2);line-height:1.6;max-width:480px;margin:0 auto;}
+
+code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--border2);padding:2px 6px;border-radius:4px;color:var(--cyan);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="logo">PM Analytics</div>
+    <div class="course-name">Ecommerce Case Study — Interactive Bootcamp</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:14%"></div></div>
+    <div class="progress-label" id="progressLabel">1 / 7</div>
+  </div>
+</div>
+
+<div class="shell">
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Modules</div>
+    <div class="nav-item active" onclick="goTo(0)" id="nav0"><div class="nav-num">1</div><div class="nav-text"><div>Why Metrics Matter</div><div class="nav-sub">PM philosophy</div></div></div>
+    <div class="nav-item" onclick="goTo(1)" id="nav1"><div class="nav-num">2</div><div class="nav-text"><div>Know Your Data</div><div class="nav-sub">Schema & structure</div></div></div>
+    <div class="nav-item" onclick="goTo(2)" id="nav2"><div class="nav-num">3</div><div class="nav-text"><div>Choosing Metrics</div><div class="nav-sub">Build your KPI stack</div></div></div>
+    <div class="nav-item" onclick="goTo(3)" id="nav3"><div class="nav-num">4</div><div class="nav-text"><div>The Comparison Trap</div><div class="nav-sub">Context matters</div></div></div>
+    <div class="nav-item" onclick="goTo(4)" id="nav4"><div class="nav-num">5</div><div class="nav-text"><div>The Funnel Framework</div><div class="nav-sub">Find the lever</div></div></div>
+    <div class="nav-item" onclick="goTo(5)" id="nav5"><div class="nav-num">6</div><div class="nav-text"><div>Anomalies & Hypotheses</div><div class="nav-sub">Validate, don't guess</div></div></div>
+    <div class="nav-item" onclick="goTo(6)" id="nav6"><div class="nav-num">7</div><div class="nav-text"><div>PM Challenge</div><div class="nav-sub">Apply everything</div></div></div>
+  </div>
+</div>
+
+<div class="main" id="mainContent">
+
+<!-- ══════════════════════ MODULE 0 ══════════════════════ -->
+<div class="module active" id="module0">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(139,92,246,.1);color:var(--purple)">Module 1 · PM Philosophy</div>
+    <h2>Why Metrics Matter — and Why Most PMs Pick the Wrong Ones</h2>
+    <p class="lead">Metrics are the language a PM uses to argue for resources, detect problems early, and prove impact. Pick the wrong ones and you'll optimize for the wrong thing — or miss a crisis until it's too late.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--purple)">The Core Problem</div>
+    <h3>Every metric tells part of a story. None tell the whole story.</h3>
+    <p>If you only track <strong>revenue</strong>, you can miss a conversion collapse masked by higher AOV. If you only track <strong>visitors</strong>, you can miss that all your growth is low-intent traffic. The skill isn't picking one metric — it's building a <em>stack</em> where each layer answers a different question.</p>
+    <ul>
+      <li><strong>Health metrics</strong> — Is the business growing? (Revenue, Visitors, Purchases)</li>
+      <li><strong>Efficiency metrics</strong> — Is the growth high-quality? (AOV, Conversion Rate, ATC Rate)</li>
+      <li><strong>Risk metrics</strong> — Are problems building beneath the surface? (Return Rate, Support Tickets)</li>
+    </ul>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Quick Check</div>Your ecommerce revenue grew 12% this month. Your CEO is thrilled. As a PM, what's your first instinct?</div>
+    <div class="quiz-options" id="q0">
+      <div class="quiz-opt" onclick="answerQuiz('q0',0,0)"><div class="opt-letter">A</div>Celebrate and prepare a win announcement.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q0',1,0)"><div class="opt-letter">B</div>Ask: is revenue up because more people bought, or because each person spent more?</div>
+      <div class="quiz-opt" onclick="answerQuiz('q0',2,0)"><div class="opt-letter">C</div>Check if it was driven by a promotion that won't repeat.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q0',3,0)"><div class="opt-letter">D</div>Both B and C — decompose the revenue increase before drawing any conclusions.</div>
+    </div>
+    <div class="quiz-explanation" id="q0-exp"><span class="ex-good">D is the PM answer.</span> Revenue growth can hide very different stories: more customers (good, scalable), higher basket size (good if organic), a one-time promotion (needs context), or price increases (might hurt volume later). Our Black Friday data showed exactly this — the prior week's revenue was 2.4× higher, but almost entirely from a 3-day event. A PM who reported "+144% WoW" would have been misleading the business.</div>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--cyan)">The PM Metric Framework</div>
+    <h3>Think in three layers: Health → Efficiency → Risk</h3>
+    <p>Most PMs only track health metrics. The best PMs add efficiency and risk layers — they're how you find the next problem <em>before</em> it hits revenue. In our analysis: health showed a false −59% crisis; efficiency (AOV, conversion) showed quality was intact; risk (return rate) revealed a delayed Black Friday cost.</p>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>A single metric is a headline. A metric stack is a story. Before asking "what number do I track," ask "what question am I trying to answer?" Then pick the metric that answers it — and add one leading indicator that warns you when it's about to go wrong.</p>
+  </div>
+
+  <div class="nav-buttons"><div></div><button class="btn btn-primary" onclick="goTo(1)">Next: Know Your Data →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 1 ══════════════════════ -->
+<div class="module" id="module1">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(6,182,212,.1);color:var(--cyan)">Module 2 · Data Literacy</div>
+    <h2>Know Your Data Before You Trust It</h2>
+    <p class="lead">Before running any analysis, a PM must understand how the data was collected, what each field actually means, and what the data cannot tell you. Bad interpretations almost always come from misunderstood data.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--cyan)">Our Dataset: A Star Schema</div>
+    <h3>One fact table surrounded by four dimension tables</h3>
+    <p>This architecture is optimized for analytical questions like "what's revenue by channel by week?" Each row in <code>daily_metrics</code> is one unique combination of date × channel × customer type × product category.</p>
+  </div>
+
+  <div class="data-callout">
+    <div class="dc"><div class="dc-label">Fact Table</div><div class="dc-val" style="color:var(--purple)">daily_metrics</div><div class="dc-sub">360 rows · 14 columns</div></div>
+    <div class="dc"><div class="dc-label">Date Range</div><div class="dc-val" style="color:var(--cyan)">45 days</div><div class="dc-sub">Nov 1 – Dec 15, 2024</div></div>
+    <div class="dc"><div class="dc-label">Data Grain</div><div class="dc-val" style="color:var(--green)">4-way</div><div class="dc-sub">Date × Channel × Segment × Category</div></div>
+    <div class="dc"><div class="dc-label">Dimensions</div><div class="dc-val" style="color:var(--yellow)">4 tables</div><div class="dc-sub">dates, channels, types, categories</div></div>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--orange)">Critical: Pre-aggregated Data</div>
+    <h3>This database has no individual transactions — only daily summaries</h3>
+    <p>Each row is already summed up: "total visitors from Email channel to Electronics by New customers on Nov 29." This means:</p>
+    <ul>
+      <li><strong>You CAN answer:</strong> Which channel has higher conversion? Which category spikes on Black Friday?</li>
+      <li><strong>You CANNOT answer:</strong> Did a specific customer abandon their cart? What items were in the average cart?</li>
+    </ul>
+    <p style="margin-top:8px">Knowing this boundary prevents you from asking the data questions it cannot answer.</p>
+  </div>
+
+  <div style="margin:18px 0">
+    <div class="concept-label" style="color:var(--purple);margin-bottom:12px">Click each dimension to understand what it contributes to analysis</div>
+    <div class="reveal-grid">
+      <div class="reveal-card" onclick="this.classList.add('revealed')">
+        <div class="reveal-hint">📅 dates table — click to explore</div>
+        <div class="reveal-inner"><div class="r-title" style="color:var(--purple)">📅 dates (45 rows)</div><div class="r-stat" style="color:var(--purple)">+2 business flags</div><div class="r-body">Beyond the calendar date, it pre-computes <code>is_black_friday_period</code> and <code>is_weekend</code>. These are analyst shortcuts — someone decided these flags matter for this business. The <code>day_of_week</code> field (0=Mon) revealed the Saturday Electronics return spike: Saturdays average 15.6% return rate vs 8–11% weekdays.</div></div>
+      </div>
+      <div class="reveal-card" onclick="this.classList.add('revealed')">
+        <div class="reveal-hint">📡 channels table — click to explore</div>
+        <div class="reveal-inner"><div class="r-title" style="color:var(--blue)">📡 channels (2 rows)</div><div class="r-stat" style="color:var(--blue)">Direct vs Email</div><div class="r-body">Direct = organic/bookmarked traffic. Email = intentional campaign audience. The comparison reveals campaign quality vs baseline demand. Post-BF, Email channel had slightly higher checkout conversion than Direct — suggesting campaign audiences were more targeted.</div></div>
+      </div>
+      <div class="reveal-card" onclick="this.classList.add('revealed')">
+        <div class="reveal-hint">👤 customer_types table — click to explore</div>
+        <div class="reveal-inner"><div class="r-title" style="color:var(--green)">👤 customer_types (2 rows)</div><div class="r-stat" style="color:var(--green)">New vs Returning</div><div class="r-body">The most PM-important dimension. New and Returning customers behave fundamentally differently: New AOV $93, Returning $87. New return rate 11.9%, Returning 10.5%. Blending them without segmentation hides your most actionable insights — including that Returning customers post-BF are your most profitable cohort (7.89% return rate).</div></div>
+      </div>
+      <div class="reveal-card" onclick="this.classList.add('revealed')">
+        <div class="reveal-hint">📦 product_categories — click to explore</div>
+        <div class="reveal-inner"><div class="r-title" style="color:var(--yellow)">📦 product_categories (2 rows)</div><div class="r-stat" style="color:var(--yellow)">Electronics · Home Goods</div><div class="r-body">Two categories with fundamentally different economics: Electronics AOV ~$100 (2× Home Goods $50). Electronics return rate is structurally higher. Aggregating them without separation gives misleading averages — the Dec 8 return spike was Electronics at 20.5% while Home Goods was 9.3% (normal). Aggregated it read 14.9% — alarming but missing the real story.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Data Literacy Check</div>Electronics return rate spiked to 20% on Dec 8. A colleague says "we have a product quality problem." What's your PM response?</div>
+    <div class="quiz-options" id="q1">
+      <div class="quiz-opt" onclick="answerQuiz('q1',0,1)"><div class="opt-letter">A</div>Agree — that's obviously a product issue and we should pause Electronics sales.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q1',1,1)"><div class="opt-letter">B</div>Ask: is this spike isolated to Electronics, or did Home Goods also spike? Then check if timing aligns with BF purchases + typical return window.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q1',2,1)"><div class="opt-letter">C</div>Wait two more weeks for more data before drawing any conclusions.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q1',3,1)"><div class="opt-letter">D</div>Only check if there were product listing changes on Dec 8.</div>
+    </div>
+    <div class="quiz-explanation" id="q1-exp"><span class="ex-good">B is correct.</span> Good PM data thinking is always comparative and temporal. The Dec 8 spike was Electronics-specific (Home Goods was 9.3% — normal). And the timing fits: BF purchases on Nov 29 + 9-day return window = Dec 8. This is predictable return lag, not a quality crisis. Isolate the signal, check the timing, rule out the baseline pattern — only then escalate.</div>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>Before you analyze, answer three questions about your data: <strong>(1) What is the grain?</strong> (one row = what?) <strong>(2) What is pre-aggregated vs raw?</strong> <strong>(3) What is missing?</strong> The schema is your contract with the data. Violate it and you ask questions the data cannot answer.</p>
+  </div>
+
+  <div class="nav-buttons"><button class="btn btn-ghost" onclick="goTo(0)">← Back</button><button class="btn btn-primary" onclick="goTo(2)">Next: Choosing Metrics →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 2 ══════════════════════ -->
+<div class="module" id="module2">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(16,185,129,.1);color:var(--green)">Module 3 · KPI Design</div>
+    <h2>Choosing Your Metric Stack — And Why Each One Earns Its Place</h2>
+    <p class="lead">There's no universal "right" set of KPIs. The right metrics depend on what stage of growth you're in and what decisions you're making. This module teaches you how to reason through that choice.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--green)">Revenue = Visitors × Conv Rate × AOV</div>
+    <h3>Every top-line metric is a product of its components</h3>
+    <p>If revenue drops, the cause is always one of three things: fewer visitors, lower conversion, or smaller baskets. Each of those breaks down further. This hierarchy tells you exactly where to look when something goes wrong — and which metric to fix first.</p>
+  </div>
+
+  <div style="margin:18px 0">
+    <div class="concept-label" style="color:var(--green);margin-bottom:12px">Click any metric to understand what it tells you and what it misses</div>
+    <div class="metric-grid">
+      <div class="m-pill" onclick="showMetric('revenue',this)"><div class="m-name">💰 Revenue</div><div class="m-why">Scale signal</div></div>
+      <div class="m-pill" onclick="showMetric('visitors',this)"><div class="m-name">👁 Visitors</div><div class="m-why">Demand signal</div></div>
+      <div class="m-pill" onclick="showMetric('purchases',this)"><div class="m-name">🛒 Purchases</div><div class="m-why">Volume signal</div></div>
+      <div class="m-pill" onclick="showMetric('aov',this)"><div class="m-name">💳 AOV</div><div class="m-why">Basket signal</div></div>
+      <div class="m-pill" onclick="showMetric('conv',this)"><div class="m-name">📈 Conv. Rate</div><div class="m-why">Efficiency signal</div></div>
+      <div class="m-pill" onclick="showMetric('atc',this)"><div class="m-name">🖱 ATC Rate</div><div class="m-why">Leading signal</div></div>
+      <div class="m-pill" onclick="showMetric('return',this)"><div class="m-name">↩ Return Rate</div><div class="m-why">Risk signal</div></div>
+      <div class="m-pill" onclick="showMetric('tickets',this)"><div class="m-name">🎫 Tickets</div><div class="m-why">Health signal</div></div>
+    </div>
+    <div class="picker-result" id="pickerResult">
+      <span style="color:var(--text3)">Click any metric above to learn what it tells you — and what it doesn't.</span>
+      <!-- Pre-rendered metric detail panels, shown/hidden by JS -->
+      <div class="metric-detail" id="md-revenue">
+        <div class="md-line"><span class="md-label">💰 Revenue</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Your business scale at a glance. Is the company growing or shrinking?</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Whether growth is healthy. Revenue can be up while conversion collapses if AOV spiked due to external factors.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Revenue looked −59% WoW because of Black Friday. Without context, this looks catastrophic — but it was expected normalization.</div>
+      </div>
+      <div class="metric-detail" id="md-visitors">
+        <div class="md-line"><span class="md-label">👁 Visitors</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Demand level. How many people are finding your product?</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Traffic quality. 100K visitors at 0.5% conversion is worse than 10K at 8%. Always pair with conversion rate.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Black Friday tripled visitors to ~36K/day. Post-BF return to ~11K was expected normalization — on a like-for-like basis, visitors were flat (+1.1%).</div>
+      </div>
+      <div class="metric-detail" id="md-purchases">
+        <div class="md-line"><span class="md-label">🛒 Purchases</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Actual transaction volume — the bridge between intent and revenue.</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Whether the business is becoming more or less efficient. Purchases can be flat while AOV grows (or vice versa).</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Post-BF purchases dropped 47% WoW — but like-for-like (same weekdays, no BF) were actually up +2.7%.</div>
+      </div>
+      <div class="metric-detail" id="md-aov">
+        <div class="md-line"><span class="md-label">💳 Average Order Value</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Basket size. Are customers buying more per visit? Is your upsell working?</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Whether AOV growth is organic or event-driven. BF had +50% AOV — not from better merchandising, but because shoppers planned large purchases.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> BF AOV $122–150. Post-BF: $73–98. The drop reveals BF was a distinct buying mode, not a sustainable trend.</div>
+      </div>
+      <div class="metric-detail" id="md-conv">
+        <div class="md-line"><span class="md-label">📈 Conversion Rate</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Overall funnel efficiency. Watch for sudden drops that signal UX or trust issues.</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Which funnel stage is breaking. "Conversion fell" is useless without knowing if it's ATC, checkout, or both.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Overall conv ~4.5%, but checkout→purchase was 84.8% (near-optimal). The real bottleneck was visitor→ATC at 8.8%.</div>
+      </div>
+      <div class="metric-detail" id="md-atc">
+        <div class="md-line"><span class="md-label">🖱 Add-to-Cart Rate</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Product-market fit at the discovery layer. Do visitors find what they want and feel compelled to buy?</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Why people added to cart or what they added. You need transaction-level data for that.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> The single highest-leverage metric. 8.8% ATC rate — a +1pp lift adds ~580 more purchases/day at current checkout efficiency.</div>
+      </div>
+      <div class="metric-detail" id="md-return">
+        <div class="md-line"><span class="md-label">↩ Return Rate</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Post-purchase satisfaction and product quality. A leading indicator of margin erosion and future negative reviews.</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Why people returned. Without return reason data, you can't distinguish quality issues from sizing issues from buyer remorse.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Electronics return rate spiked to 20.5% on Dec 8. This was BF return lag — timing confirmed it. Without the category split, this signal was buried.</div>
+      </div>
+      <div class="metric-detail" id="md-tickets">
+        <div class="md-line"><span class="md-label">🎫 Support Tickets</span></div>
+        <div class="md-line"><span style="color:var(--green)">✓ Tells you:</span> Operational health and customer friction. Rising ticket rate often precedes churn and negative word-of-mouth.</div>
+        <div class="md-line"><span style="color:var(--red)">✗ Misses:</span> Whether tickets are from a bug, a communication gap, or a product issue. Always categorize ticket types.</div>
+        <div class="md-line"><span style="color:var(--yellow)">📊 Our data:</span> Post-BF: 4.23 tickets per 100 purchases vs 3.99 baseline — elevated but declining. BF lag still flowing through the support queue.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-label">⚡ Decision Scenario</div>
+    <h3>Your manager says "pick 3 metrics for the weekly VP dashboard." Which 3?</h3>
+    <p class="s-context">Available: Revenue, Visitors, Purchases, AOV, Conversion Rate, Add-to-Cart Rate, Return Rate, Support Tickets. You can only surface 3 — everything else goes to a drill-down page.</p>
+    <div class="scenario-opts">
+      <div class="s-opt" onclick="showScenario('s1','bad')"><div class="s-opt-label">Option A</div><div class="s-opt-text">Revenue, Visitors, AOV — the big numbers that impress the exec team.</div></div>
+      <div class="s-opt" onclick="showScenario('s1','good')"><div class="s-opt-label">Option B</div><div class="s-opt-text">Revenue, Purchases, Conversion Rate — health + efficiency in one glance.</div></div>
+      <div class="s-opt" onclick="showScenario('s1','ok')"><div class="s-opt-label">Option C</div><div class="s-opt-text">Revenue, Visitors, Return Rate — growth + a leading risk signal.</div></div>
+      <div class="s-opt" onclick="showScenario('s1','good')"><div class="s-opt-label">Option D</div><div class="s-opt-text">Revenue, Purchases, Add-to-Cart Rate — output + the leading lever that drives it.</div></div>
+    </div>
+    <div class="s-result" id="s1">
+      <!-- populated by showScenario() -->
+    </div>
+    <!-- Pre-rendered scenario result content -->
+    <div id="s1-good" style="display:none">
+      <span class="r-good">Strong choice.</span> This gives you output (revenue), volume (purchases shows if growth came from more orders), and either efficiency or leading signal. Revenue up + conversion up = healthy. Revenue up + conversion down = volume-dependent growth, fragile. You could also argue D — ATC rate is the best leading indicator of future purchases and the highest-leverage optimization target we identified.
+    </div>
+    <div id="s1-bad" style="display:none">
+      <span class="r-bad">Not the strongest configuration.</span> Revenue + Visitors + AOV tells you about output and size but gives you no efficiency or risk signal. Revenue can be up while conversion quietly collapses (if visitor count doubled but conversion halved). For a VP dashboard, you need at least one metric that warns about problems, not just current performance. Return Rate or Conversion Rate belongs here.
+    </div>
+    <div id="s1-ok" style="display:none">
+      <span class="r-ok">Reasonable but incomplete.</span> Revenue + Visitors + Return Rate gives Health + Risk layers. What's missing is an Efficiency metric. You could see revenue growing while conversion quietly collapses. Adding AOV or Conversion Rate would complete the picture.
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>The best 3-metric dashboard for this business is <strong>Revenue + Purchases + Add-to-Cart Rate</strong>. Revenue is the output, Purchases shows funnel health, and ATC rate is the only leading indicator with real leverage — a 1pp improvement adds ~580 purchases/day. Everything else is a drill-down for when those three signal a problem.</p>
+  </div>
+
+  <div class="nav-buttons"><button class="btn btn-ghost" onclick="goTo(1)">← Back</button><button class="btn btn-primary" onclick="goTo(3)">Next: The Comparison Trap →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 3 ══════════════════════ -->
+<div class="module" id="module3">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(245,158,11,.1);color:var(--yellow)">Module 4 · Analysis Integrity</div>
+    <h2>The Comparison Trap — Why Context Destroys (or Saves) Your Analysis</h2>
+    <p class="lead">The most common PM analytics mistake: comparing two time periods without controlling for events that make them structurally incomparable. The Black Friday case is the perfect illustration.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--yellow)">The Problem Stated Plainly</div>
+    <h3>Week-over-week comparisons assume both weeks are equivalent. They often aren't.</h3>
+    <p>Our dataset: "previous week" (Nov 25–Dec 1) includes 3 Black Friday / Cyber Weekend days where traffic ran at 3–4× normal. A naive WoW comparison produces numbers that would trigger a crisis meeting:</p>
+  </div>
+
+  <div class="data-callout">
+    <div class="dc"><div class="dc-label">Revenue WoW</div><div class="dc-val" style="color:var(--red)">−59.1%</div><div class="dc-sub">$308K vs $754K</div></div>
+    <div class="dc"><div class="dc-label">Visitors WoW</div><div class="dc-val" style="color:var(--red)">−46.2%</div><div class="dc-sub">82K vs 153K</div></div>
+    <div class="dc"><div class="dc-label">Purchases WoW</div><div class="dc-val" style="color:var(--red)">−47.0%</div><div class="dc-sub">3.7K vs 7.0K</div></div>
+  </div>
+
+  <div class="chart-box">
+    <h4>Daily Revenue: both weeks on one axis. The amber region = Black Friday surge days.</h4>
+    <canvas id="bfChart"></canvas>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--green)">The Fix: Like-for-Like Comparison</div>
+    <h3>Remove the distorted days. Compare structurally equivalent periods.</h3>
+    <p>Remove Nov 29–Dec 1 (BF days) from the prior week. Compare only Mon–Thu of each week. The picture flips completely:</p>
+    <ul style="margin-top:10px">
+      <li><strong>Revenue:</strong> +10.7% (Dec 2–5 vs Nov 25–28)</li>
+      <li><strong>Visitors:</strong> +1.1% (flat and healthy)</li>
+      <li><strong>AOV:</strong> +7.2% (customers spending more per order)</li>
+    </ul>
+    <p style="margin-top:10px">The business was growing quietly. The raw WoW showed a −59% drop that was entirely a Black Friday normalization — not a demand problem.</p>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Analysis Integrity Check</div>Your company ran a flash sale last Tuesday. This week's Tuesday revenue is −40% week-over-week. Engineering thinks there's a bug. What do you do first?</div>
+    <div class="quiz-options" id="q2">
+      <div class="quiz-opt" onclick="answerQuiz('q2',0,3)"><div class="opt-letter">A</div>File a P1 incident immediately — a 40% drop is always critical.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q2',1,3)"><div class="opt-letter">B</div>Compare this Tuesday to the Tuesday two weeks ago (which had no flash sale) before alarming anyone.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q2',2,3)"><div class="opt-letter">C</div>Check conversion rate and error logs in case there's a real technical issue.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q2',3,3)"><div class="opt-letter">D</div>Both B and C — validate the comparison baseline first, and check technical signals in parallel.</div>
+    </div>
+    <div class="quiz-explanation" id="q2-exp"><span class="ex-good">D is the PM answer.</span> Never panic on raw WoW during known promo periods. (1) Adjust the comparison to a structurally equivalent day — if that shows normal, it's normalization. (2) Simultaneously check technical metrics (error rate, page load, checkout errors) in case there IS a bug on top. Our analysis showed that when we removed BF days, revenue was actually up — the "crisis" was entirely context.</div>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--orange)">Three Comparison Frameworks for PMs</div>
+    <h3>Choose the right lens for the question you're asking</h3>
+    <ul>
+      <li><strong>WoW (Week-over-Week)</strong> — Good for catching sudden changes. Bad when consecutive weeks have different events.</li>
+      <li><strong>YoY (Year-over-Year)</strong> — Best for seasonal businesses. Controls for seasonal patterns automatically. Requires a year of data.</li>
+      <li><strong>Like-for-Like (LfL)</strong> — Best when events distort one period. Remove distorted days, compare the rest. What we used here.</li>
+    </ul>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>Before presenting any WoW or MoM comparison, always ask: <strong>"Were both periods structurally equivalent?"</strong> If there was a promo, holiday, launch, or system incident in either period — flag it and adjust. A −59% WoW that's actually a +10.7% LfL is the difference between a crisis email and a success story.</p>
+  </div>
+
+  <div class="nav-buttons"><button class="btn btn-ghost" onclick="goTo(2)">← Back</button><button class="btn btn-primary" onclick="goTo(4)">Next: The Funnel →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 4 ══════════════════════ -->
+<div class="module" id="module4">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(59,130,246,.1);color:var(--blue)">Module 5 · Funnel Thinking</div>
+    <h2>The Funnel Framework — Finding Where the Lever Actually Is</h2>
+    <p class="lead">Every customer journey is a funnel. Revenue = Visitors × ATC Rate × Checkout Rate × Purchase Rate × AOV. Each stage has a different cost to improve. The PM's job is to find the stage with the most leverage — not the worst-looking number.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--blue)">Our Funnel — Real Numbers from Dec 2–8</div>
+    <h3>From 82,156 visitors to 3,688 purchases in one week</h3>
+    <p>As you read this funnel, think: which stage has the most room to improve? Which has the most leverage if you lift it by even 1 percentage point?</p>
+  </div>
+
+  <div class="funnel-visual">
+    <div class="fv-row"><div class="fv-label">Visitors</div><div class="fv-bar-wrap"><div class="fv-bar" style="background:linear-gradient(90deg,#8b5cf6,#6d28d9)" id="fb0"><span>82,156</span></div></div><div class="fv-pct">100%</div></div>
+    <div class="fv-row"><div class="fv-label">Add to Cart</div><div class="fv-bar-wrap"><div class="fv-bar" style="background:linear-gradient(90deg,#3b82f6,#1d4ed8)" id="fb1"><span>7,237</span></div></div><div class="fv-pct">8.8%</div></div>
+    <div class="fv-row"><div class="fv-label">Checkout</div><div class="fv-bar-wrap"><div class="fv-bar" style="background:linear-gradient(90deg,#06b6d4,#0e7490)" id="fb2"><span>4,351</span></div></div><div class="fv-pct">5.3%</div></div>
+    <div class="fv-row"><div class="fv-label">Purchases</div><div class="fv-bar-wrap"><div class="fv-bar" style="background:linear-gradient(90deg,#10b981,#059669)" id="fb3"><span>3,688</span></div></div><div class="fv-pct">4.5%</div></div>
+  </div>
+  <button class="btn btn-ghost" onclick="animateFunnel()" style="margin-bottom:18px;font-size:12px">▶ Animate Funnel</button>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Funnel Analysis</div>Looking at the funnel: where is the biggest drop-off, and where should you focus optimization effort?</div>
+    <div class="quiz-options" id="q3">
+      <div class="quiz-opt" onclick="answerQuiz('q3',0,4)"><div class="opt-letter">A</div>Checkout → Purchase (84.8%) — always optimize the last step because it's closest to money.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q3',1,4)"><div class="opt-letter">B</div>Visitor → Add to Cart (8.8%) — this is the biggest absolute volume drop and has the most room to grow.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q3',2,4)"><div class="opt-letter">C</div>Add to Cart → Checkout (60%) — losing 40% there seems like a lot.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q3',3,4)"><div class="opt-letter">D</div>It depends on whether the drop-off is fixable or expected behavior at each stage.</div>
+    </div>
+    <div class="quiz-explanation" id="q3-exp"><span class="ex-good">B is correct here — but D is the nuanced PM answer.</span> Visitor→ATC at 8.8% is the largest absolute volume drop. But you also ask: is 8.8% bad? What the data told us: checkout conversion (84.8%) was essentially unmovable — it held constant even when BF tripled traffic. That means checkout optimization has low ROI. The ATC stage has both volume and variability. A +1pp lift (8.8%→9.8%) adds ~820 more carts/day → ~580 more purchases at current checkout rates. That's your lever.</div>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--green)">The Quality Gate Effect — Why Checkout Stayed Stable</div>
+    <h3>During Black Friday, visitors tripled. Checkout conversion didn't budge.</h3>
+    <p>This was one of the most surprising findings. BF visitors went from ~12,000/day to ~36,000/day — yet checkout→purchase conversion stayed at 83–89% on all three BF days (identical to normal days).</p>
+    <p style="margin-top:10px">The explanation: <strong>the ATC step is a quality gate.</strong> Only ~8.8% of visitors add to cart even on high-volume days. By the time someone reaches checkout, they've already self-selected as a serious buyer. Volume at the top doesn't dilute quality at the bottom.</p>
+    <p style="margin-top:10px">Implication: if you want to improve late-funnel conversion, product and trust signals (reviews, return policy) are likely already working. The opportunity is at the top — better product discovery, smarter recommendations, compelling category pages.</p>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>When analyzing a funnel, <strong>don't optimize the metric that looks worst — optimize the stage with the most leverage.</strong> Calculate: (impact of +1pp at each stage) × (cost to improve it). In this business, checkout is near-perfect. ATC rate is the lever. That single insight should direct the next 6 months of product investment.</p>
+  </div>
+
+  <div class="nav-buttons"><button class="btn btn-ghost" onclick="goTo(3)">← Back</button><button class="btn btn-primary" onclick="goTo(5)">Next: Anomalies →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 5 ══════════════════════ -->
+<div class="module" id="module5">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(239,68,68,.1);color:var(--red)">Module 6 · Critical Thinking</div>
+    <h2>Anomaly Detection & Hypothesis Testing — The Scientific Method for PMs</h2>
+    <p class="lead">The highest-value PM skill is spotting something in the data that doesn't fit — then forming a testable hypothesis rather than jumping to a conclusion. Here's how we applied it to 5 real anomalies in this dataset.</p>
+  </div>
+
+  <div class="concept">
+    <div class="concept-label" style="color:var(--red)">The PM Hypothesis Loop</div>
+    <h3>Observe → Hypothesize → Test → Validate → Act</h3>
+    <ul>
+      <li><strong>Bad PM:</strong> "Return rate spiked → we have a quality problem → pause sales."</li>
+      <li><strong>Good PM:</strong> "Return rate spiked on Dec 8, specifically Electronics. Does the timing match BF purchases + typical return window? Let me check."</li>
+    </ul>
+    <p style="margin-top:8px">A hypothesis is falsifiable. Testing it either confirms, partially supports, or rules it out. Only then should you act.</p>
+  </div>
+
+  <table class="hyp-table">
+    <thead><tr><th>Anomaly</th><th>Hypothesis</th><th>Data Test</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--text);font-weight:600">BF AOV was +50% — despite being a discount event</td><td style="color:var(--text2)">Shoppers buying larger planned baskets, not impulse discount items</td><td style="color:var(--text2)">Electronics AOV: $100→$151 within-category. Mix shift explains only 3pp of 50pp lift.</td><td><span class="badge confirmed">Confirmed</span></td></tr>
+      <tr><td style="color:var(--text);font-weight:600">New customers spend more than returning ($93 vs $87)</td><td style="color:var(--text2)">New buyers over-buy (multiple variants), returning buyers know exactly what they want</td><td style="color:var(--text2)">Pattern holds across all periods. New: 11.93% return vs Returning: 10.45%.</td><td><span class="badge confirmed">Confirmed</span></td></tr>
+      <tr><td style="color:var(--text);font-weight:600">Electronics return rate 20.5% on Dec 8 (Sunday avg: 11%)</td><td style="color:var(--text2)">BF Electronics purchases (Nov 29) returning 9 days later via standard return window</td><td style="color:var(--text2)">Nov 29 + 9 days = Dec 8. Home Goods same day: 9.3% (normal). Timing exact.</td><td><span class="badge confirmed">Confirmed</span></td></tr>
+      <tr><td style="color:var(--text);font-weight:600">Checkout conversion unmoved despite 3× traffic spike</td><td style="color:var(--text2)">ATC step acts as a quality gate — only serious buyers reach checkout</td><td style="color:var(--text2)">ATC rate stable at 8–10% even during BF. All 14 days: checkout conv. 82–89%.</td><td><span class="badge confirmed">Confirmed</span></td></tr>
+      <tr><td style="color:var(--text);font-weight:600">Post-BF support tickets elevated (4.23 vs 3.99 baseline)</td><td style="color:var(--text2)">BF-related issues generating tickets with 3–7 day lag</td><td style="color:var(--text2)">Dec 2 spike: 5.11/100 purchases. Aligns with BF shipping lag. Monitoring needed through Dec 12.</td><td><span class="badge partial">Partial</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="scenario">
+    <div class="scenario-label">⚡ Your Turn — Apply the Framework</div>
+    <h3>It's Dec 11. Electronics return rate is 14.2%. Is this a problem that requires immediate action?</h3>
+    <p class="s-context">Context: Dec 8 was 20.54% (already spiking). Dec 7 was 9.37%. BF Electronics return wave started Dec 4–8. Support ticket rate this week is 4.41 per 100 purchases.</p>
+    <div class="scenario-opts">
+      <div class="s-opt" onclick="showScenario('s2','bad')"><div class="s-opt-label">Action A</div><div class="s-opt-text">Email the Electronics supplier urgently about quality problems — 14.2% is too high.</div></div>
+      <div class="s-opt" onclick="showScenario('s2','good')"><div class="s-opt-label">Action B</div><div class="s-opt-text">Flag as expected BF return lag — it's declining from 20.5% and should normalize by Dec 14. Continue monitoring.</div></div>
+      <div class="s-opt" onclick="showScenario('s2','ok')"><div class="s-opt-label">Action C</div><div class="s-opt-text">Pause all Electronics promotions until the return rate drops below 12%.</div></div>
+      <div class="s-opt" onclick="showScenario('s2','ok')"><div class="s-opt-label">Action D</div><div class="s-opt-text">Check if return reasons cluster around specific SKUs — if yes, investigate that SKU specifically.</div></div>
+    </div>
+    <div class="s-result" id="s2"></div>
+    <div id="s2-good" style="display:none"><span class="r-good">Correct PM call.</span> 14.2% on Dec 11 is declining from 20.5% on Dec 8 — the trajectory is downward, exactly what you'd expect from a BF return wave normalizing. The Electronics-specific nature (Home Goods was normal on Dec 8) and the 9-day timing both support "expected lag." The right action: continue monitoring with a clear threshold — if it doesn't reach below 12% by Dec 14, then escalate to a product quality review.</div>
+    <div id="s2-bad" style="display:none"><span class="r-bad">Too aggressive.</span> Before contacting the supplier, you'd need to confirm it's actually a product issue vs. expected return behavior. The data strongly suggests the latter: timing matches BF return window, it's declining, and it's category-specific. Supplier contact is premature — and would damage a relationship unnecessarily if this turns out to be normal return lag.</div>
+    <div id="s2-ok" style="display:none"><span class="r-ok">Reasonable escalation, but misplaced priority.</span> Given the return rate is declining (20.5%→14.2%) and the BF return lag hypothesis is well-supported, a pause isn't warranted yet. D is a smart supplementary action — if you have SKU-level data, clustering analysis could confirm whether specific products drive the spike (quality issue) vs. broad distribution (return window behavior).</div>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">Module Takeaway</div>
+    <p>Every anomaly deserves a hypothesis, not a reaction. The four-question test: <strong>(1)</strong> Is the signal category-specific or broad? <strong>(2)</strong> Does timing match a known event? <strong>(3)</strong> What's the day-of-week baseline? <strong>(4)</strong> Is it trending better or worse? Only after answering these four should you decide whether to act, monitor, or escalate.</p>
+  </div>
+
+  <div class="nav-buttons"><button class="btn btn-ghost" onclick="goTo(4)">← Back</button><button class="btn btn-primary" onclick="goTo(6)">Final: PM Challenge →</button></div>
+</div>
+
+<!-- ══════════════════════ MODULE 6 ══════════════════════ -->
+<div class="module" id="module6">
+  <div class="module-header">
+    <div class="module-tag" style="background:rgba(249,115,22,.1);color:var(--orange)">Module 7 · PM Challenge</div>
+    <h2>The PM Challenge — Apply Everything You've Learned</h2>
+    <p class="lead">Four scenarios. One best answer each. These test everything: metric selection, comparison integrity, funnel thinking, and hypothesis testing. No hints this time.</p>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Challenge 1 of 4</div>Your head of growth says "we had 50K visitors last week and only 2,200 purchases — our conversion rate is terrible at 4.4%. Fix checkout." What do you say?</div>
+    <div class="quiz-options" id="q4">
+      <div class="quiz-opt" onclick="answerQuiz('q4',0,6)"><div class="opt-letter">A</div>Agree — 4.4% is below industry average. Start a checkout redesign project.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q4',1,6)"><div class="opt-letter">B</div>Push back — our checkout→purchase rate is 84.8% which is excellent. The 4.4% is visitor→purchase, and bundles ATC + checkout stages. The bottleneck is ATC (8.8%), not checkout.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q4',2,6)"><div class="opt-letter">C</div>Ask for more data before deciding.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q4',3,6)"><div class="opt-letter">D</div>Split-test the checkout page while also investigating ATC.</div>
+    </div>
+    <div class="quiz-explanation" id="q4-exp"><span class="ex-good">B is the key insight.</span> "Conversion rate" is ambiguous — it matters what stage you're measuring. Visitor→purchase (4.4%) bundles three separate stages. Our data showed checkout→purchase is 84.8% — near-optimal. The actual bottleneck is visitor→ATC at 8.8%. Fixing checkout when ATC is the constraint is optimizing the wrong variable. Classic PM trap: reacting to a number without decomposing what drives it.</div>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Challenge 2 of 4</div>A new PM builds a dashboard: Page Views, Add-to-Cart Count, Checkout Rate, Support Ticket Count. What critical layer is missing?</div>
+    <div class="quiz-options" id="q5">
+      <div class="quiz-opt" onclick="answerQuiz('q5',0,6)"><div class="opt-letter">A</div>Revenue — you always need a top-line health metric.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q5',1,6)"><div class="opt-letter">B</div>Return Rate — the risk signal that warns of margin erosion before it hits revenue.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q5',2,6)"><div class="opt-letter">C</div>Average Order Value — without it you can't tell if revenue changes are volume-driven or basket-driven.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q5',3,6)"><div class="opt-letter">D</div>All three — Revenue (health), AOV (efficiency), and Return Rate (risk) are all missing.</div>
+    </div>
+    <div class="quiz-explanation" id="q5-exp"><span class="ex-good">D is correct.</span> The new PM has: engagement (page views), funnel (ATC, checkout rate), and a support signal. Missing: <strong>Revenue</strong> (health layer), <strong>AOV</strong> (efficiency layer — is each purchase getting more valuable?), and <strong>Return Rate</strong> (risk layer — is quality eroding?). Without these three layers, you have an incomplete picture of the business.</div>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Challenge 3 of 4</div>You're preparing the weekly report. Revenue +10.7% vs same days last week. AOV +7.2%. Visitors flat (+1.1%). Return Rate 10.4% vs 10.8% prior. How do you characterize this week?</div>
+    <div class="quiz-options" id="q6">
+      <div class="quiz-opt" onclick="answerQuiz('q6',0,6)"><div class="opt-letter">A</div>Concerning — visitors are flat, so all growth came from AOV. That's not sustainable.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q6',1,6)"><div class="opt-letter">B</div>Strong and healthy — revenue up from efficiency (AOV +7.2%) and slight demand growth. Return rate improving. No red flags.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q6',2,6)"><div class="opt-letter">C</div>Mixed — revenue growth is good but we need more visitors to sustain it.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q6',3,6)"><div class="opt-letter">D</div>Impossible to say without year-over-year data for the same period.</div>
+    </div>
+    <div class="quiz-explanation" id="q6-exp"><span class="ex-good">B is the correct read.</span> Revenue +10.7% driven by AOV +7.2% and purchases +2.7% with flat visitor growth is a high-quality signal. Customers are buying more per visit — that's efficiency improvement, not just more traffic. Return rate declining slightly confirms quality is holding. D is technically valid for seasonal context, but the like-for-like comparison is already seasonally controlled.</div>
+  </div>
+
+  <div class="quiz-wrap">
+    <div class="quiz-q"><div class="q-label">Challenge 4 of 4 — The Hard One</div>Your VP asks: "Should we invest in a checkout redesign OR a product recommendation engine? Same cost, same 6-month timeline." Based on this dataset, what do you recommend?</div>
+    <div class="quiz-options" id="q7">
+      <div class="quiz-opt" onclick="answerQuiz('q7',0,6)"><div class="opt-letter">A</div>Checkout redesign — it's the last step before purchase and directly touches conversion.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q7',1,6)"><div class="opt-letter">B</div>Recommendation engine — ATC rate (8.8%) is the only funnel stage with room to grow. +1pp = ~580 more purchases/day. Checkout is already at 84.8%.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q7',2,6)"><div class="opt-letter">C</div>Neither — focus instead on a retention campaign for Returning customers, who have 7.89% return rate post-BF and highest LTV.</div>
+      <div class="quiz-opt" onclick="answerQuiz('q7',3,6)"><div class="opt-letter">D</div>B and C together — recommendation engine for ATC uplift, retention campaign for the returning customer cohort.</div>
+    </div>
+    <div class="quiz-explanation" id="q7-exp"><span class="ex-good">D is the complete PM answer.</span> The data gives two clear signals: (1) checkout is near-optimal (84.8%) — redesign has minimal upside and high risk of disrupting something that works. (2) ATC rate (8.8%) has leverage — better product discovery drives more carts and flows through the efficient checkout. (3) Returning customers post-BF have 7.89% return rate and are the most profitable cohort — a retention campaign (lower cost than a 6-month build) compounds the gains. B alone is right on the funnel argument. D is the complete PM answer that considers both acquisition efficiency and retention economics together.</div>
+  </div>
+
+  <div class="completion-banner" id="completionBanner">
+    <div class="cb-icon">🎓</div>
+    <h3>Bootcamp Complete!</h3>
+    <p>You've worked through all 7 modules: PM philosophy, data literacy, metric selection, comparison integrity, funnel analysis, hypothesis testing, and strategic application. The framework you've practiced — Observe, Decompose, Hypothesize, Validate, Act — applies to every analytics problem you'll face as a PM.</p>
+  </div>
+
+  <div class="takeaway">
+    <div class="t-label">The Complete PM Analytics Framework</div>
+    <ul>
+      <li><strong>Layer your metrics:</strong> Health (Revenue, Visitors, Purchases) → Efficiency (AOV, Conv Rate) → Risk (Return Rate, Support Tickets)</li>
+      <li><strong>Always ask: are the periods comparable?</strong> Event-adjusted like-for-like comparisons beat raw WoW for anything near a promotion or holiday.</li>
+      <li><strong>Find the leverage stage</strong> in your funnel — optimize where improvement compounds, not where the number looks worst.</li>
+      <li><strong>Form hypotheses, not conclusions.</strong> Test with: Is it isolated? Does timing match a known event? What's the day-of-week baseline?</li>
+      <li><strong>Segment before reporting.</strong> New vs Returning, Electronics vs Home Goods — aggregate numbers hide the most actionable insights.</li>
+    </ul>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-ghost" onclick="goTo(5)">← Back</button>
+    <button class="btn btn-primary" onclick="showCompletion()">Complete Course 🎓</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let currentModule = 0;
+const totalModules = 7;
+let completedModules = new Set();
+const answeredQuizzes = {};
+const correctAnswers = { q0:3, q1:1, q2:3, q3:1, q4:1, q5:3, q6:1, q7:3 };
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────────
+function goTo(n) {
+  document.getElementById('module' + currentModule).classList.remove('active');
+  document.getElementById('nav'    + currentModule).classList.remove('active');
+  completedModules.add(currentModule);
+  document.getElementById('nav' + currentModule).classList.add('completed');
+  currentModule = n;
+  document.getElementById('module' + n).classList.add('active');
+  document.getElementById('nav'    + n).classList.add('active');
+  document.getElementById('nav'    + n).classList.remove('completed');
+  const pct = Math.round(((n + 1) / totalModules) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = (n + 1) + ' / ' + totalModules;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 3) setTimeout(drawBFChart, 200);
+  if (n === 4) setTimeout(animateFunnel, 400);
+}
+
+// ── QUIZ ───────────────────────────────────────────────────────────────────────
+function answerQuiz(qId, chosen, moduleNum) {
+  if (answeredQuizzes[qId]) return;
+  answeredQuizzes[qId] = true;
+  const correct = correctAnswers[qId];
+  const opts = document.querySelectorAll('#' + qId + ' .quiz-opt');
+  opts.forEach(function(o, i) {
+    o.classList.add('disabled');
+    if (i === correct) o.classList.add('correct');
+    else if (i === chosen && i !== correct) o.classList.add('wrong');
+  });
+  const exp = document.getElementById(qId + '-exp');
+  exp.classList.add('show');
+}
+
+// ── METRIC PICKER ──────────────────────────────────────────────────────────────
+function showMetric(key, el) {
+  // Deselect all pills
+  document.querySelectorAll('.m-pill').forEach(function(p) { p.classList.remove('selected'); });
+  el.classList.add('selected');
+  // Hide all metric details (show placeholder)
+  document.querySelectorAll('.metric-detail').forEach(function(d) { d.classList.remove('active'); });
+  var detail = document.getElementById('md-' + key);
+  if (detail) {
+    detail.classList.add('active');
+    // Hide the placeholder span
+    var placeholder = document.querySelector('#pickerResult > span');
+    if (placeholder) placeholder.style.display = 'none';
+  }
+}
+
+// ── SCENARIO ───────────────────────────────────────────────────────────────────
+function showScenario(sid, quality) {
+  var result = document.getElementById(sid);
+  var contentEl = document.getElementById(sid + '-' + quality);
+  if (!contentEl || !result) return;
+  result.textContent = '';
+  // Clone the pre-rendered content nodes into result
+  var clone = contentEl.cloneNode(true);
+  clone.style.display = '';
+  while (clone.firstChild) {
+    result.appendChild(clone.firstChild.cloneNode(true));
+  }
+  result.className = 's-result show ' + quality;
+}
+
+// ── BF CHART ───────────────────────────────────────────────────────────────────
+var bfChartInst = null;
+function drawBFChart() {
+  if (bfChartInst) { bfChartInst.destroy(); bfChartInst = null; }
+  var ctx = document.getElementById('bfChart');
+  if (!ctx) return;
+  bfChartInst = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: ['N25','N26','N27','N28','N29','N30','D1','D2','D3','D4','D5','D6','D7','D8'],
+      datasets: [
+        { label: 'Dec 2–8 (curr)', data: [null,null,null,null,null,null,null,42547,47792,39130,44715,45561,50962,38215], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.12)', borderWidth:2.5, pointRadius:4, tension:.3, fill:true, spanGaps:false },
+        { label: 'Nov 25–Dec 1 (prev)', data: [46739,39929,40147,31460,188224,215046,192810,null,null,null,null,null,null,null], borderColor:'#4b5563', borderDash:[5,4], borderWidth:2, pointRadius:3, tension:.3, fill:false, spanGaps:false },
+        { label: 'Black Friday', data: [null,null,null,null,250000,250000,250000,null,null,null,null,null,null,null], borderWidth:0, backgroundColor:'rgba(245,158,11,.1)', fill:true, pointRadius:0, spanGaps:false }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins: {
+        legend: { position:'top', labels:{ color:'#8892b0', font:{size:11}, usePointStyle:true, filter: function(i) { return i.text !== 'Black Friday'; } } },
+        tooltip: { mode:'index', intersect:false, callbacks:{ label: function(c) { return c.dataset.label === 'Black Friday' ? null : ' $' + (c.parsed.y ? c.parsed.y.toLocaleString() : '—'); } } }
+      },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,.04)' }, ticks:{ color:'#4b5680', font:{size:10} } },
+        y: { grid:{ color:'rgba(255,255,255,.04)' }, ticks:{ color:'#4b5680', font:{size:10}, callback: function(v) { return '$' + (v/1000).toFixed(0) + 'K'; } } }
+      }
+    }
+  });
+}
+
+// ── FUNNEL ─────────────────────────────────────────────────────────────────────
+function animateFunnel() {
+  var widths = ['100%','8.8%','5.3%','4.5%'];
+  ['fb0','fb1','fb2','fb3'].forEach(function(id, i) {
+    setTimeout(function() {
+      var el = document.getElementById(id);
+      if (el) el.style.width = widths[i];
+    }, i * 300);
+  });
+}
+
+// ── COMPLETION ─────────────────────────────────────────────────────────────────
+function showCompletion() {
+  var banner = document.getElementById('completionBanner');
+  if (banner) {
+    banner.classList.add('show');
+    banner.scrollIntoView({ behavior: 'smooth' });
+  }
+  completedModules.add(6);
+  document.getElementById('nav6').classList.add('completed');
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressLabel').textContent = '7 / 7';
+}
+</script>
+</body>
+</html>
